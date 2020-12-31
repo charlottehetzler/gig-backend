@@ -31,6 +31,7 @@ import { Consumer } from "../user/consumer";
     payments: Payment[];
 
     @OneToOne(() => Consumer)
+    @Field(type =>Consumer)
     @JoinColumn()
     consumer: Consumer; 
 }

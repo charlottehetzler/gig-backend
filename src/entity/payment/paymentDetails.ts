@@ -34,6 +34,7 @@ import { PaymentMethod } from "./paymentMethod";
     updatedAt: Date;
 
     @OneToOne(() => PaymentMethod)
+    @Field(type => PaymentMethod)
     @JoinColumn()
     paymentMethod: PaymentMethod; 
 

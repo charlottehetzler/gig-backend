@@ -37,10 +37,12 @@ import { Gig } from "../gig/gig";
     updatedAt: Date;
     
     @OneToOne(() => Consumer)
+    @Field(type => Consumer)
     @JoinColumn()
     consumer: Consumer; 
 
     @OneToOne(() => Gig)
+    @Field(type => Gig)
     @JoinColumn()
     gig: Gig;
 
@@ -50,6 +52,7 @@ import { Gig } from "../gig/gig";
     account: Account;
 
     @OneToOne(() => PaymentMethod)
+    @Field(type => PaymentMethod)
     @JoinColumn()
     paymentMethod: PaymentMethod; 
 

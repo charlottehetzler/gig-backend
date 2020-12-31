@@ -1,14 +1,26 @@
 import { buildSchemaSync, createResolversMap } from 'type-graphql';
 import { gql } from 'apollo-server-core';
 import { printSchema, buildFederatedSchema } from '@apollo/federation';
-import { GigResolver } from '../resolvers/gig';
-import { CategoryResolver } from '../resolvers/category';
-import { PaymentResolver } from '../resolvers/payment';
-import { UserResolver } from '../resolvers/user';
-import { JobResolver } from '../resolvers/job';
+import { GigResolver } from '../resolvers/gig/gig';
+import { CategoryResolver } from '../resolvers/gig/category';
+import { PaymentResolver } from '../resolvers/payment/payment';
+import { UserResolver } from '../resolvers/user/user';
+import { JobResolver } from '../resolvers/gig/job';
+import { ProducerResolver } from '../resolvers/user/producer';
+import { ReviewResolver } from '../resolvers/user/review';
+import { AddressResolver } from '../resolvers/user/address';
 
 export const compiledSchema = buildSchemaSync({
-    resolvers: [ GigResolver, CategoryResolver, PaymentResolver, UserResolver, JobResolver ]
+    resolvers: [ 
+        CategoryResolver, 
+        GigResolver, 
+        JobResolver,
+        PaymentResolver, 
+        UserResolver, 
+        ProducerResolver,
+        ReviewResolver,
+        AddressResolver 
+    ]
 });
 
 export const schema = buildFederatedSchema({

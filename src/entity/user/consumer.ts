@@ -12,6 +12,7 @@ import { PaymentMethod } from "../payment/paymentMethod";
     id: number;
 
     @OneToOne(() => GigUser)
+    @Field(type => GigUser)
     @JoinColumn()
     user: GigUser; 
 

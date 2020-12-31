@@ -18,9 +18,13 @@ import { Expense } from "./expense";
     @Field({ nullable: false })
     title: string;
 
-    @Column({ nullable: false })
+    @Column({ type: 'decimal', scale: 2, nullable: false})
     @Field({ nullable: false })
     price: number;
+
+    @Column({ nullable: false, default: '$' })
+    @Field({ nullable: false })
+    currency: string;
 
     @Column({ nullable: false })
     @Field({ nullable: false })
@@ -46,10 +50,6 @@ import { Expense } from "./expense";
     @Field(() => GraphQLISODateTime)
     updatedAt: Date;
 
-    @OneToOne(() => Job)
-    @JoinColumn()
-    job: Job; 
-
     @ManyToOne(type => Consumer, consumer => consumer.gigs)
     @JoinColumn({ name: 'consumerId' })
     @Field(type => Consumer)
@@ -63,4 +63,9 @@ import { Expense } from "./expense";
     @OneToMany(type => Expense, expense => expense.gig, {cascade: true})
     @Field(type => [Expense], { nullable: true })
     expenses: Expense[];
+
+    @ManyToOne(type => Job, job => job.gigs)
+    @JoinColumn({ name: 'jobId' })
+    @Field(type => Job)
+    job: Job;
 }

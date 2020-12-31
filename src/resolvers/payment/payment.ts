@@ -1,9 +1,9 @@
 import { Resolver, Query, Arg, InputType, Field, Mutation } from 'type-graphql';
-import { Consumer } from '../entity/user/consumer';
+import { Consumer } from '../../entity/user/consumer';
 import { getRepository } from 'typeorm';
-import { PaymentMethod } from '../entity/payment/paymentMethod';
-import { PaymentType } from '../entity/types/payment';
-import { PaymentDetails } from '../entity/payment/paymentDetails';
+import { PaymentMethod } from '../../entity/payment/paymentMethod';
+import { PaymentType } from '../../entity/types/payment';
+import { PaymentDetails } from '../../entity/payment/paymentDetails';
 
 @InputType()
 export class PaymentDetailsQuery {

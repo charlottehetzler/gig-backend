@@ -19,6 +19,7 @@ export enum UserType {
     type: UserType.consumer | UserType.producer;
 
     @OneToOne(() => GigUser)
+    @Field(type => GigUser)
     @JoinColumn()
     user: GigUser;   
 

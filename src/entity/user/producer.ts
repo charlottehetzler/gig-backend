@@ -3,6 +3,7 @@ import { Field, ObjectType, GraphQLISODateTime } from "type-graphql";
 import { GigUser } from "./gigUser";
 import { Gig } from "../gig/gig";
 import { Job } from "../gig/job";
+import { JobProducerRelation } from "../gig/jobProducerRelation";
 
 @ObjectType()
 @Entity() export class Producer extends BaseEntity {
@@ -12,6 +13,7 @@ import { Job } from "../gig/job";
     id: number;
 
     @OneToOne(() => GigUser)
+    @Field(type => GigUser)
     @JoinColumn()
     user: GigUser; 
 
@@ -31,7 +33,8 @@ import { Job } from "../gig/job";
     @Field(type => [Gig], { nullable: true })
     gigs: Gig[];
 
-    @OneToMany(type => Job, job => job.producer, {cascade: true})
-    @Field(type => [Job], { nullable: true })
-    jobs: Job[];
+    @OneToMany(type => JobProducerRelation, jobProducerRelation => jobProducerRelation.producer, { nullable: true })
+    @Field(type => [JobProducerRelation], {nullable: true })
+    jobProducerRelation: JobProducerRelation[];   
+
 }

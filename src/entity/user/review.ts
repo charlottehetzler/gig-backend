@@ -15,14 +15,10 @@ import { GigUser } from "./gigUser";
 
     @Column({ nullable: false })
     @Field({ nullable: false })
-    toUserId: number;
+    rating: string;
 
-    @Column({ nullable: false })
-    @Field({ nullable: false })
-    rating: number;
-
-    @Column({ nullable: false })
-    @Field({ nullable: false })
+    @Column({ nullable: true })
+    @Field({ nullable: true })
     comment: string;
 
     @CreateDateColumn({ nullable: false })
