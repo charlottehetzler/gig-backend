@@ -38,6 +38,11 @@ export class CategoryResolver {
     return await JobResolver.getAllJobsForUser({ categoryId: category.id }, 0, 0);
   };
 
+  @FieldResolver(() => [Job])
+  async categoryJobs(@Root() category: Category) {
+    return await Job.find({where: {category: category}})
+  };
+
   //Add Category
   @Mutation(() => Job)
   async createCategory(@Arg('input') input: CategoryQuery): Promise<Category> {
