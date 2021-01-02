@@ -58,6 +58,11 @@ export class UserResolver {
         return await GigUser.findOne({where: {id: query.userId}, relations: ['addresses', 'reviews']})
     }
 
+    @Query(returns => GigUser)
+    async getUserForChat (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
+        return await GigUser.findOne({where: {id: query.userId}, relations: ['addresses', 'reviews', 'chatRoomUsers', 'messages']})
+    }
+
     //update Profile
     @Mutation(() => Address)
     async updateProfile(@Arg('input') input: UserInput): Promise<GigUser> {

@@ -9,6 +9,8 @@ import { JobResolver } from '../resolvers/gig/job';
 import { ProducerResolver } from '../resolvers/user/producer';
 import { ReviewResolver } from '../resolvers/user/review';
 import { AddressResolver } from '../resolvers/user/address';
+import { MessageResolver } from '../resolvers/chat/message';
+import { ChatRoomResolver } from '../resolvers/chat/chatRoom';
 
 export const compiledSchema = buildSchemaSync({
     resolvers: [ 
@@ -19,7 +21,9 @@ export const compiledSchema = buildSchemaSync({
         UserResolver, 
         ProducerResolver,
         ReviewResolver,
-        AddressResolver 
+        AddressResolver,
+        MessageResolver,
+        ChatRoomResolver
     ]
 });
 

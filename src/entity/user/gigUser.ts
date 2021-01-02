@@ -1,16 +1,16 @@
 import { Entity, BaseEntity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, UpdateDateColumn, OneToOne, JoinColumn } from "typeorm";
 import { Field, GraphQLISODateTime, ObjectType } from "type-graphql";
 import { Address } from "./address";
-import { PaymentMethod } from "../payment/paymentMethod";
 import { Review } from "./review";
 import { Producer } from "./producer";
 import { Consumer } from "./consumer";
+import { ChatRoomUser } from "../chat/chatRoomUser";
+import { Message } from "../chat/message";
 
 export enum UserType {
     "consumer" = "consumer",
     "producer" = "producer"
 }
-
 
 @ObjectType()
 @Entity() export class GigUser extends BaseEntity {
@@ -58,6 +58,14 @@ export enum UserType {
     @OneToMany(type => Review, review => review.user, {cascade: true})
     @Field(type => [Review], { nullable: true })
     reviews: Review[];
+
+    @OneToMany(type => ChatRoomUser, chatRoomUser => chatRoomUser.user, {cascade: true})
+    @Field(type => [ChatRoomUser], { nullable: true })
+    chatRoomUsers: ChatRoomUser[];
+
+    @OneToMany(type => Message, message => message.user, {cascade: true})
+    @Field(type => [Message], { nullable: true })
+    messages: Message[];
 
     @OneToOne(() => Producer)
     @Field(type => Producer)
