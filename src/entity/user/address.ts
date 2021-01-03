@@ -1,6 +1,7 @@
-import { Entity, BaseEntity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, UpdateDateColumn } from "typeorm";
+import { Entity, BaseEntity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, OneToMany } from "typeorm";
 import { Field, GraphQLISODateTime, ObjectType } from "type-graphql";
 import { GigUser } from "./gigUser";
+import { Gig } from "../gig/gig";
 
 @ObjectType()
 @Entity() export class Address extends BaseEntity {
@@ -57,4 +58,9 @@ import { GigUser } from "./gigUser";
     @JoinColumn({ name: 'userId' })
     @Field(type => GigUser)
     user: GigUser;
+
+    @OneToMany(type => Gig, gig => gig.address, {cascade: true})
+    @Field(type => [Gig], { nullable: true })
+    gigs: Gig[];
+
 }

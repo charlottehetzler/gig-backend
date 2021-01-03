@@ -1,9 +1,10 @@
-import { Resolver, Query, Arg, InputType, Field, Mutation } from 'type-graphql';
+import { Resolver, Query, Arg, InputType, Field, Mutation, FieldResolver, Root } from 'type-graphql';
 import { Job } from '../../entity/gig/job';
 import { Gig } from '../../entity/gig/gig';
 import { Consumer } from '../../entity/user/consumer';
 import { Producer } from '../../entity/user/producer';
 import { getManager, getRepository, Not } from 'typeorm';
+import { GigUser, UserType } from '../../entity/user/gigUser';
 
 @InputType()
 export class GigQuery {
@@ -75,9 +76,12 @@ export class GigUserQuery {
   
     @Field( { nullable: true })
     producerId?: number;
+
+    @Field( { nullable: true })
+    userId?: number;
 }
 
-@Resolver()
+@Resolver(of => Gig)
 export class GigResolver {
     // Account History
     @Query(returns => [Gig])
@@ -88,15 +92,16 @@ export class GigResolver {
     ) : Promise <Gig[]> {
         try {
             let newQuery = {};
-            if (query.producerId) {
-                const producer = await Producer.findOne(query.producerId);
-                newQuery['producer'] = producer;
-            }
-            if (query.consumerId) {
-                const consumer = await Consumer.findOne(query.consumerId);
+            const user = await GigUser.findOne(query.userId);
+            if (user.type === UserType.consumer) {
+                const consumer = await Consumer.findOne({where: {user: user}});
                 newQuery['consumer'] = consumer;
             }
-            return await Gig.find({where: newQuery, take: first, skip: offset, relations: ['job']})
+            if (user.type === UserType.producer) {
+                const producer = await Producer.findOne({where: {user: user}});
+                newQuery['producer'] = producer;
+            }
+            return await Gig.find({where: newQuery, take: first, skip: offset, relations: ['job', 'producer', 'consumer', 'address']})
 
         } catch (error) {
             throw `GigResolver.getAllGigsForUser errored. Error-Msg: ${error}`
@@ -110,21 +115,38 @@ export class GigResolver {
     @Arg('first', { defaultValue: 10 }) first: number = 10,
     @Arg('offset', { defaultValue: 0 }) offset: number = 0,
     ) : Promise <Gig[]> {
-        let gigs : Gig[];
-        //TODO: add date/time constraint OR status
-        if (query.consumerId) {
-            gigs = await Gig.find({
-                where: {consumerId: query.consumerId, status: Not("cancelled")}, 
-                order: {updatedAt: "DESC"}, 
-            });
-        } else if (query.producerId) {
-            gigs = await Gig.find({
-                where: {producerId: query.producerId, status: Not("cancelled")}, 
-                order: {updatedAt: "DESC"}, 
-            });
+        let newQuery = {};
+        const user = await GigUser.findOne(query.userId);
+        if (user.type === UserType.consumer) {
+            const consumer = await Consumer.findOne({where: {user: user}});
+            newQuery['consumer'] = consumer;
         }
-        return gigs;
+        if (user.type === UserType.producer) {
+            const producer = await Producer.findOne({where: {user: user}});
+            newQuery['producer'] = producer;
+        }
+        newQuery['status'] = Not('cancelled');
+        return await Gig.find({
+            where: newQuery, 
+            take: first, 
+            skip: offset, 
+            relations: ['job', 'producer', 'consumer', 'address'], 
+            order: {updatedAt: 'DESC'}
+        });
     }
+
+    @FieldResolver(() => [GigUser])
+    async members(@Root() gig: Gig) {
+        let members : GigUser[] = [];
+        const producer = await Producer.findOne({where: {id: gig.producer.id}, relations: ['user']});
+        const firstMember = await GigUser.findOne(producer.user.id);
+
+        const consumer = await Consumer.findOne({where: {id: gig.consumer.id}, relations: ['user']});
+        const secondMember = await GigUser.findOne(consumer.user.id);
+        
+        members.unshift(firstMember, secondMember);
+        return members;
+    };
 
     // Add Gig
     @Mutation(() => Gig)

@@ -3,7 +3,6 @@ import { Producer } from '../../entity/user/producer';
 import { Review } from '../../entity/user/review';
 import { JobProducerRelation } from '../../entity/gig/jobProducerRelation';
 import { ReviewResolver } from './review';
-import { Gig } from '../../entity/gig/gig';
 
 @InputType()
 export class ProducerQuery {
@@ -46,11 +45,5 @@ export class ProducerResolver {
     async reviews(@Root() producer: Producer) {
       return await ReviewResolver.getReviewsForProducer(producer.id);
     };
-
-    @FieldResolver(() => [Gig])
-    async lastGig(@Root() producer: Producer) {
-        return await Gig.find({where: {producer: producer}, order: {createdAt: 'DESC'}});//TODO: change createdAt to date
-    };
-
     
 }
