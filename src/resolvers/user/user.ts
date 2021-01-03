@@ -3,7 +3,8 @@ import { GigUser } from '../../entity/user/gigUser';
 import { Address } from '../../entity/user/address';
 import { getRepository } from 'typeorm';
 import { Review } from '../../entity/user/review';
-import Decimal from "decimal.js";
+import { ChatRoom } from '../../entity/chat/chatRoom';
+import { ChatRoomUser } from '../../entity/chat/chatRoomUser';
 
 
 @InputType()
@@ -55,7 +56,12 @@ export class UserResolver {
     // Get Profile Info
     @Query(returns => GigUser)
     async getUser (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
-        return await GigUser.findOne({where: {id: query.userId}, relations: ['addresses', 'reviews']})
+        return await GigUser.findOne({where: {id: query.userId}, relations: ['addresses', 'reviews', 'chatRoomUsers', 'messages']})
+    }
+
+    @Query(returns => GigUser)
+    async getUserForChat (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
+        return await GigUser.findOne({where: {id: query.userId}, relations: ['addresses', 'reviews', 'chatRoomUsers', 'messages']})
     }
 
     //update Profile
@@ -94,6 +100,17 @@ export class UserResolver {
         if (reviewCount !== 0) averageRating = ratingCount / reviewCount;
         
         return averageRating.toFixed(2);
+    };
+
+    @FieldResolver(() => [ChatRoom])
+    async allChatRooms(@Root() user: GigUser) {
+        const chatRoomUsers = await ChatRoomUser.find({where: {user: user}, relations: ['chatRoom', 'user'], order: {updatedAt: 'DESC'}});
+        let chatRooms : ChatRoom[] = [];
+        for (const chatRoomUser of chatRoomUsers) {
+            const chatRoom = await ChatRoom.findOne(chatRoomUser.chatRoom.id);
+            chatRooms.push(chatRoom);
+        };
+        return chatRooms;
     };
 
     static async getReviewGiver(reviewId: number) : Promise <GigUser> {
