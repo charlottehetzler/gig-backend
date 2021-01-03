@@ -1,4 +1,4 @@
-import { Resolver, Query, Arg, InputType, Field, Mutation, Subscription } from 'type-graphql';
+import { Resolver, Query, Arg, InputType, Field, Mutation, Subscription, Root, PubSub, Publisher } from 'type-graphql';
 import { Message } from '../../entity/chat/message';
 import { ChatRoom } from '../../entity/chat/chatRoom';
 import { GigUser } from '../../entity/user/gigUser';
@@ -39,7 +39,10 @@ export class MessageResolver {
     }
 
     @Mutation(() => Message)
-    async createMessage(@Arg('input', () => MessageInput) input: MessageInput) {
+    async createMessage(
+        @Arg('input', () => MessageInput) input: MessageInput,
+        @PubSub("NEW MESSAGE") publish: Publisher<Message>,
+    ) : Promise <Message> {
         try {
             const user = await GigUser.findOne(input.userId);
             const chatRoom = await ChatRoom.findOne(input.chatRoomId);
@@ -48,9 +51,15 @@ export class MessageResolver {
             message.user = user;
             message.chatRoom = chatRoom;
             await message.save();
+            await publish(message);
             return message;
         } catch (error) {
             throw `MessageResolver.createMessage errored for user: ${input.userId}, chatRoomId: ${input.chatRoomId}. Error Msg: ${error}`;
         }
+    }
+
+    @Subscription(() => Message, {topics: "NEW MESSAGE"})
+    async onCreateMessage ( @Root() message: Message) {
+        return message;
     }
 }

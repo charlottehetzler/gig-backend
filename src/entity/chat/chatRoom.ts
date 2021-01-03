@@ -1,4 +1,4 @@
-import { Entity, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,  OneToMany } from "typeorm";
+import { Entity, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn,  OneToMany, Column } from "typeorm";
 import { Field, ObjectType, GraphQLISODateTime } from "type-graphql";
 import { Message } from "./message";
 import { ChatRoomUser } from "./chatRoomUser";
@@ -9,6 +9,10 @@ import { ChatRoomUser } from "./chatRoomUser";
     @PrimaryGeneratedColumn()
     @Field()
     id: number;
+
+    @Column( {nullable: true} )
+    @Field({nullable: true})
+    lastMessageId: number;
 
     @OneToMany(type => Message, message => message.chatRoom, {cascade: true})
     @Field(type => [Message], { nullable: true })

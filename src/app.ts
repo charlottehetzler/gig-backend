@@ -1,11 +1,10 @@
 import express from 'express';
 import logger from "./logger/logger";
-import http from 'http';
+import http, { createServer } from 'http';
 import { config } from '../config/index';
 import { createConnection } from "typeorm";
 import * as databaseConfig from '../ormconfig';
-import bodyParser = require("body-parser");
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, PubSub } from 'apollo-server-express';
 import { schema } from "./utils/CreateSchema";
 
 export class Server {
@@ -15,9 +14,20 @@ export class Server {
 
     constructor() {
         this.setupExecpetionHandling();
-        this.apolloServer = new ApolloServer({ schema: schema });
+        this.apolloServer = new ApolloServer({ 
+            schema: schema, 
+            subscriptions: {
+                path: '/subscriptions',
+                onConnect: async (connectionParams, webSocket) => {
+                    console.log('xxx');
+                    console.log(connectionParams);
+                },
+            } 
+        });
         this.app = express();
+        this.server = http.createServer(this.app);
         this.apolloServer.applyMiddleware({app: this.app});
+        this.apolloServer.installSubscriptionHandlers( this.server );
     }
 
     private setupExecpetionHandling() {
@@ -47,10 +57,10 @@ export class Server {
             logger.info('Connecting to database...');
             // @ts-ignore
             await createConnection(databaseConfig);
-            await this.app.use(bodyParser);
 
             logger.info(`Starting server on port ${port}`)
-            this.server = this.app.listen({ port: port });
+            // this.server = this.app.listen({ port: port });
+            this.server.listen({ port: port });
 
         } catch (err) {
             logger.error(err);
