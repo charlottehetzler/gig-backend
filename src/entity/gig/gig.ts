@@ -6,6 +6,7 @@ import { Job } from "./job";
 import { Consumer } from "../user/consumer";
 import { Producer } from "../user/producer";
 import { Expense } from "./expense";
+import { Address } from "../user/address";
 
 @ObjectType()
 @Entity() export class Gig extends BaseEntity {
@@ -35,12 +36,12 @@ import { Expense } from "./expense";
     description: string;
 
     @Column({ nullable: true })
-    @Field(type => GraphQLISODateTime)
-    date: Date;
+    @Field({ nullable: true })
+    date: string;
 
     @Column({ nullable: true })
-    @Field(type => GraphQLISODateTime)
-    time: Date;
+    @Field({ nullable: true })
+    time: string;
 
     @CreateDateColumn({ nullable: false })
     @Field(type => GraphQLISODateTime)
@@ -68,4 +69,10 @@ import { Expense } from "./expense";
     @JoinColumn({ name: 'jobId' })
     @Field(type => Job)
     job: Job;
+
+    @ManyToOne(type => Address, address => address.gigs)
+    @JoinColumn({ name: 'addressId' })
+    @Field(type => Address)
+    address: Address;
+ 
 }
