@@ -86,6 +86,11 @@ export class JobResolver {
     return await JobProducerRelationResolver.getProducersForJob({ jobId: job.id }, 0, 0);
   };
 
+  @FieldResolver(() => Category)
+  async gigCategory(@Root() job: Job) {
+    return await Category.findOne(job.category)
+  };
+
   // Add Job
   @Mutation(() => Job)
   async createJob(@Arg('input') input: JobQuery): Promise<Job> {

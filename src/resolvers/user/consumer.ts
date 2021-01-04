@@ -6,7 +6,6 @@ import { Consumer } from '../../entity/user/consumer';
 export class ConsumerResolver {
     @FieldResolver(() => GigUser)
     async user(@Root() consumer: Consumer) {
-        console.log(consumer)
         return await GigUser.findOne(consumer.user);
     };
 }

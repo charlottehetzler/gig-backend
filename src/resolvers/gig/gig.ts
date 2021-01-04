@@ -5,36 +5,10 @@ import { Consumer } from '../../entity/user/consumer';
 import { Producer } from '../../entity/user/producer';
 import { getManager, getRepository, Not } from 'typeorm';
 import { GigUser, UserType } from '../../entity/user/gigUser';
+import { Category } from '../../entity/gig/category';
 
 @InputType()
 export class GigQuery {
-    @Field({ nullable: false })
-    title: string;
-    
-    @Field({ nullable: false })
-    price: number;
-    
-    @Field({ nullable: false })
-    jobId: number;
-
-    @Field({ nullable: false })
-    userId: number;
-
-    @Field({ nullable: false })
-    date: Date;
-    
-    @Field({ nullable: true })
-    status?: string;
-
-    @Field({ nullable: true })
-    description?: string;
-    
-    @Field( { nullable: true })
-    producerId?: number;
-}
-
-@InputType()
-export class GigInput {
     @Field({ nullable: true })
     title?: string;
     
@@ -48,22 +22,22 @@ export class GigInput {
     date?: Date;
 
     @Field({ nullable: true })
-    time?: Date;
-    
-    @Field({ nullable: true })
     description?: string;
-    
+
     @Field({ nullable: true })
     jobId?: number;
 
     @Field({ nullable: true })
+    userId?: number;
+    
+    @Field({ nullable: true })
     consumerId?: number;
-  
+
     @Field( { nullable: true })
     producerId?: number;
 
-    @Field({ nullable: false })
-    gigId: number;
+    @Field({ nullable: true })
+    gigId?: number;
 }
 
 @InputType()
@@ -76,6 +50,9 @@ export class GigUserQuery {
 
     @Field( { nullable: true })
     userId?: number;
+
+    @Field( { nullable: true })
+    gigId?: number;
 }
 
 @Resolver(of => Gig)
@@ -99,7 +76,6 @@ export class GigResolver {
                 newQuery['producer'] = producer;
             }
             return await Gig.find({where: newQuery, take: first, skip: offset, relations: ['job', 'producer', 'consumer', 'address']})
-
         } catch (error) {
             throw `GigResolver.getAllGigsForUser errored. Error-Msg: ${error}`
         }
@@ -128,9 +104,19 @@ export class GigResolver {
             take: first, 
             skip: offset, 
             relations: ['job', 'producer', 'consumer', 'address'], 
-            order: {date: 'DESC'}
+            order: {date: 'ASC'}
         });
     }
+
+    @Query(returns =>Gig)
+    async getOneGig (@Arg('query', () => GigUserQuery) query: GigUserQuery) : Promise <Gig> {
+        try {
+            return await Gig.findOne({where: {id: query.gigId}, relations: ['job', 'producer', 'consumer', 'address']});
+        } catch (error) {
+            throw `GigResolver.getOneGig errored: Error-Msg: ${error}`
+        }
+    }
+
 
     @FieldResolver(() => [GigUser])
     async members(@Root() gig: Gig) {
@@ -148,60 +134,54 @@ export class GigResolver {
         return members;
     };
 
-    // Add Gig
+    // Add + Modify Gig
     @Mutation(() => Gig)
-    async createGig(@Arg('input') input: GigQuery): Promise<Gig> {
+    async updateGig(@Arg('input') input: GigQuery): Promise<Gig> {
         try {
-            const job = await Job.findOne(input.jobId);
-            const user = await GigUser.findOne(input.userId)
-            const consumer = await Consumer.findOne({where: {user: user}})
-            if (!consumer) {
-                throw `no Consumer found with userId: ${input.userId}`
+            let gig : Gig;
+            console.log(input)
+            if (input.gigId) {
+                const existing = await getRepository(Gig).findOne(input.gigId);
+                if (existing) {
+                    const tmp: any = {
+                        ...existing,
+                        ...input
+                    };
+                    gig = tmp as Gig;
+                }
+                await getRepository(Gig).save(gig)
+
+            } else {
+                const job = await Job.findOne(input.jobId);
+                const user = await GigUser.findOne(input.userId)
+                const consumer = await Consumer.findOne({where: {user: user}})
+                if (!consumer) {
+                    throw `no Consumer found with userId: ${input.userId}`
+                }
+                let producer : Producer;
+                if (input.producerId) {
+                    producer = await Producer.findOne(input.producerId);
+                }
+                gig = new Gig();
+                gig.title = input.title;
+                gig.price = input.price;
+                gig.status = input.status;
+                gig.description = input.description;
+                gig.date = input.date;
+                gig.job = job;
+                gig.consumer = consumer;
+                if (producer) gig.producer = producer;
+                await gig.save();
             }
-            let producer : Producer;
-            if (input.producerId) {
-                producer = await Producer.findOne(input.producerId);
-            }
-            const gig = new Gig();
-            gig.title = input.title;
-            gig.price = input.price;
-            gig.status = input.status;
-            gig.description = input.description;
-            gig.date = input.date;
-            gig.job = job;
-            gig.consumer = consumer;
-            if (producer) gig.producer = producer;
-            await gig.save();
             return await Gig.findOne({where: {id: gig.id}, relations: ['job', 'consumer', 'producer', 'address']});
         } catch (error) {
-            throw `GigResolver.createGig errored for userId ${input.userId}. Error-Msg: ${error}`;
+            throw `GigResolver.updateGig errored for userId ${input.userId}. Error-Msg: ${error}`;
         }
-    }
-
-    // Modify Gig
-    @Mutation(() => Gig)
-    async updateGig(@Arg('input') input: GigInput): Promise<Gig> {
-        let data = (input as unknown) as Gig;
-        let query: any = undefined;
-        if(input.gigId) query = { id: input.gigId };
-        if(query !== undefined) {
-            const existing = await getRepository(Gig).findOne(query);
-            if(existing) {
-                const tmp: any = {
-                    ...existing,
-                    ...input
-                };
-                data = tmp as Gig;
-            }
-        }
-
-        const gig = await getRepository(Gig).save(data);
-        return gig;
     }
 
     // Cancel Gig
     @Mutation(() => Boolean)
-    async deleteGig(@Arg('input') input: GigInput): Promise<Boolean> {
+    async deleteGig(@Arg('input') input: GigQuery): Promise<Boolean> {
         const gig = await Gig.findOne(input.gigId);
         gig.status = "cancelled";
         await gig.save();
