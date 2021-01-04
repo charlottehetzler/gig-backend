@@ -15,25 +15,22 @@ export class GigQuery {
     price: number;
     
     @Field({ nullable: false })
-    status: string;
-
-    @Field({ nullable: false })
-    date: Date;
-
-    @Field({ nullable: false })
-    time: Date;
-    
-    @Field({ nullable: false })
-    description: string;
-    
-    @Field({ nullable: false })
     jobId: number;
 
     @Field({ nullable: false })
-    consumerId: number;
-  
-    @Field( { nullable: false })
-    producerId: number;
+    userId: number;
+
+    @Field({ nullable: false })
+    date: Date;
+    
+    @Field({ nullable: true })
+    status?: string;
+
+    @Field({ nullable: true })
+    description?: string;
+    
+    @Field( { nullable: true })
+    producerId?: number;
 }
 
 @InputType()
@@ -131,41 +128,54 @@ export class GigResolver {
             take: first, 
             skip: offset, 
             relations: ['job', 'producer', 'consumer', 'address'], 
-            order: {updatedAt: 'DESC'}
+            order: {date: 'DESC'}
         });
     }
 
     @FieldResolver(() => [GigUser])
     async members(@Root() gig: Gig) {
         let members : GigUser[] = [];
-        const producer = await Producer.findOne({where: {id: gig.producer.id}, relations: ['user']});
-        const firstMember = await GigUser.findOne(producer.user.id);
-
-        const consumer = await Consumer.findOne({where: {id: gig.consumer.id}, relations: ['user']});
-        const secondMember = await GigUser.findOne(consumer.user.id);
-        
-        members.unshift(firstMember, secondMember);
+        if (gig.producer) {
+            const producer = await Producer.findOne({where: {id: gig.producer.id}, relations: ['user']});
+            const firstMember = await GigUser.findOne(producer.user.id);
+            if (firstMember) members.push(firstMember)
+        }
+        if (gig.consumer) {
+            const consumer = await Consumer.findOne({where: {id: gig.consumer.id}, relations: ['user']});
+            const secondMember = await GigUser.findOne(consumer.user.id);
+            if (secondMember) members.push(secondMember)
+        }
         return members;
     };
 
     // Add Gig
     @Mutation(() => Gig)
     async createGig(@Arg('input') input: GigQuery): Promise<Gig> {
-        const job = await Job.findOne(input.jobId);
-        const consumer = await Consumer.findOne(input.consumerId);
-        const producer = await Producer.findOne(input.producerId);
-        
-        const gig = new Gig();
-        gig.title = input.title;
-        gig.price = input.price;
-        gig.status = input.status;
-        gig.description = input.description;
-        // gig.date = input.date;
-        // gig.time = input.time;
-        gig.job = job;
-        gig.consumer = consumer;
-        gig.producer = producer;
-        return await gig.save();
+        try {
+            const job = await Job.findOne(input.jobId);
+            const user = await GigUser.findOne(input.userId)
+            const consumer = await Consumer.findOne({where: {user: user}})
+            if (!consumer) {
+                throw `no Consumer found with userId: ${input.userId}`
+            }
+            let producer : Producer;
+            if (input.producerId) {
+                producer = await Producer.findOne(input.producerId);
+            }
+            const gig = new Gig();
+            gig.title = input.title;
+            gig.price = input.price;
+            gig.status = input.status;
+            gig.description = input.description;
+            gig.date = input.date;
+            gig.job = job;
+            gig.consumer = consumer;
+            if (producer) gig.producer = producer;
+            await gig.save();
+            return await Gig.findOne({where: {id: gig.id}, relations: ['job', 'consumer', 'producer', 'address']});
+        } catch (error) {
+            throw `GigResolver.createGig errored for userId ${input.userId}. Error-Msg: ${error}`;
+        }
     }
 
     // Modify Gig

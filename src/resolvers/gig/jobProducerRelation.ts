@@ -38,9 +38,10 @@ export class JobProducerRelationResolver {
   static async getJobsForProducer(userId: number)  {
     try {
       if (userId) {
-        const user = await GigUser.findOne(userId);
-        const producer = await Producer.findOne({where: {user: user}})
         let jobs : Job[] = [];
+        const user = await GigUser.findOne({where: {id: userId}, relations: ['producer']});
+        const producer = await Producer.findOne({where: {user: user}})
+        if (!producer) return jobs;
         const relations = await JobProducerRelation.find({where: {producerId: producer.id}});
         for (const relation of relations) {
           const job = await Job.findOne({ where: {id: relation.jobId} });

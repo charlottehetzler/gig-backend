@@ -1,7 +1,5 @@
 import { Entity, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Column, OneToMany, OneToOne, JoinColumn, ManyToOne } from "typeorm";
 import { Field, ObjectType, GraphQLISODateTime } from "type-graphql";
-import { Category } from "./category";
-import { GigUser } from "../user/gigUser";
 import { Job } from "./job";
 import { Consumer } from "../user/consumer";
 import { Producer } from "../user/producer";
@@ -27,7 +25,7 @@ import { Address } from "../user/address";
     @Field({ nullable: false })
     currency: string;
 
-    @Column({ nullable: false })
+    @Column({ nullable: false, default: 'open' })
     @Field({ nullable: false })
     status: string;
 
@@ -36,12 +34,8 @@ import { Address } from "../user/address";
     description: string;
 
     @Column({ nullable: true })
-    @Field({ nullable: true })
-    date: string;
-
-    @Column({ nullable: true })
-    @Field({ nullable: true })
-    time: string;
+    @Field(type => GraphQLISODateTime)
+    date: Date;
 
     @CreateDateColumn({ nullable: false })
     @Field(type => GraphQLISODateTime)

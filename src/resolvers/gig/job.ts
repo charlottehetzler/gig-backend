@@ -25,15 +25,6 @@ export class JobQuery {
 
 @Resolver(of => Job)
 export class JobResolver {
-  // Home Screen - All Gigs & Browse Random
-
-  // static async getAllJobsForUser (
-  //   @Arg('query', () => JobQuery) query: JobQuery,
-  //   @Arg('first', { defaultValue: 10 }) first: number = 10,
-  //   @Arg('offset', { defaultValue: 0 }) offset: number = 0,
-  //   ) : Promise <Job[]> {
-  //     return await Job.find({ where: query, take: first, skip: offset});
-  // }
 
   @Query(returns => [Job])
   async getAllJobsForProducerOrCategory (
@@ -55,7 +46,7 @@ export class JobResolver {
         return await Job.find({ where: newQuery, take: first, skip: offset, relations: ['category']});
 
       } catch (error) {
-        throw `errored: Error-Msg: ${error}`
+        throw `JobResolver.getAllJobsForProducerOrCategory errored: Error-Msg: ${error}`
       }
   }
   @Query(returns => [Job])
@@ -64,9 +55,8 @@ export class JobResolver {
     ) : Promise <Job[]> {
       try {
         return await JobProducerRelationResolver.getJobsForProducer(query.userId)
-
       } catch (error) {
-        throw `errored: Error-Msg: ${error}`
+        throw `JobResolver.getAllJobsForProducer errored: Error-Msg: ${error}`
       }
   }
 
@@ -78,7 +68,7 @@ export class JobResolver {
     try {
       return await Job.find({take: first, skip: offset, relations: ['category']});
     } catch (error) {
-      throw `errored: Error-Msg: ${error}`
+      throw `JobResolver.getAllJobs errored: Error-Msg: ${error}`
     }
   }
 
@@ -87,7 +77,7 @@ export class JobResolver {
     try {
       return await Job.findOne(query.jobId);
     } catch (error) {
-      throw `errored: Error-Msg: ${error}`
+      throw `JobResolver.getOneJob errored: Error-Msg: ${error}`
     }
   }
 
@@ -99,20 +89,23 @@ export class JobResolver {
   // Add Job
   @Mutation(() => Job)
   async createJob(@Arg('input') input: JobQuery): Promise<Job> {
-    const job = new Job();
-    job.name = input.name;
-    const category = await Category.findOne(input.categoryId);
-    job.category = category
-    const newJob = await job.save();
-    const producer = await Producer.findOne(input.producerId);
-    const relation = new JobProducerRelation();
-    relation.job = newJob;
-    relation.jobId = newJob.id;
-    relation.producerId = input.producerId;
-    relation.producer = producer;
-    await relation.save();
-
-    return newJob;
+    try {
+      const job = new Job();
+      job.name = input.name;
+      const category = await Category.findOne(input.categoryId);
+      job.category = category
+      const newJob = await job.save();
+      const producer = await Producer.findOne(input.producerId);
+      const relation = new JobProducerRelation();
+      relation.job = newJob;
+      relation.jobId = newJob.id;
+      relation.producerId = input.producerId;
+      relation.producer = producer;
+      await relation.save();
+      return newJob;
+    } catch (error) {
+      throw `JobResolver.createJob errored: Error-Msg: ${error}`
+    }
   }
 
   static async getAllJobsForUser (query: JobQuery, first: number, offset: number) : Promise<Job[]> {

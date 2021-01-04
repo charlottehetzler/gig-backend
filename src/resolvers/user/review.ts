@@ -39,7 +39,7 @@ export class ReviewResolver {
   }
 
   @Query(returns => Review)
-  async getLastReviewForUser (@Arg('query') query : ReviewQuery) : Promise <Review> {
+  async getLastReviewForUser (@Arg('query') query : ReviewQuery) {
     const user = await GigUser.findOne(query.userId);
     return await Review.findOne({where: {user: user}, order: {createdAt: 'DESC'}});
   }
