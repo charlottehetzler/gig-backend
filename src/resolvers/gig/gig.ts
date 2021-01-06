@@ -108,6 +108,35 @@ export class GigResolver {
         });
     }
 
+    @Query(returns => [Gig])
+    async getGigHistory(
+    @Arg('query', () => GigUserQuery) query: GigUserQuery,
+    @Arg('first', { defaultValue: 10 }) first: number = 10,
+    @Arg('offset', { defaultValue: 0 }) offset: number = 0,
+    ) : Promise <Gig[]> {
+        let gigs : Gig[] = [];
+        let newQuery = {};
+        const user = await GigUser.findOne(query.userId);
+        if (user.type === UserType.consumer) {
+            const consumer = await Consumer.findOne({where: {user: user}});
+            newQuery['consumer'] = consumer;
+        }
+        if (user.type === UserType.producer) {
+            const producer = await Producer.findOne({where: {user: user}});
+            newQuery['producer'] = producer;
+        }
+        newQuery['status'] = Not('open')
+        return await Gig.find({
+            where: newQuery, 
+            take: first, 
+            skip: offset, 
+            relations: ['job', 'producer', 'consumer', 'address'], 
+            order: {date: 'ASC'}
+        });
+
+        
+    }
+
     @Query(returns =>Gig)
     async getOneGig (@Arg('query', () => GigUserQuery) query: GigUserQuery) : Promise <Gig> {
         try {
@@ -116,7 +145,6 @@ export class GigResolver {
             throw `GigResolver.getOneGig errored: Error-Msg: ${error}`
         }
     }
-
 
     @FieldResolver(() => [GigUser])
     async members(@Root() gig: Gig) {
@@ -139,7 +167,6 @@ export class GigResolver {
     async updateGig(@Arg('input') input: GigQuery): Promise<Gig> {
         try {
             let gig : Gig;
-            console.log(input)
             if (input.gigId) {
                 const existing = await getRepository(Gig).findOne(input.gigId);
                 if (existing) {

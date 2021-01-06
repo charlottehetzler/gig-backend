@@ -3,6 +3,7 @@ import { Producer } from '../../entity/user/producer';
 import { Review } from '../../entity/user/review';
 import { JobProducerRelation } from '../../entity/gig/jobProducerRelation';
 import { ReviewResolver } from './review';
+import { Gig } from '../../entity/gig/gig';
 
 @InputType()
 export class ProducerQuery {
@@ -29,7 +30,7 @@ export class ProducerResolver {
             let producers : Producer[] = [];
             const relations = await JobProducerRelation.find({where: {jobId: query.jobId}});
             for (const relation of relations) {
-                const producer = await Producer.findOne({where: {id: relation.producerId}, relations: ['user']});
+                const producer = await Producer.findOne({where: {id: relation.producerId}, relations: ['user', 'gigs']});
                 producers.push(producer);
             }
             return producers;
@@ -44,6 +45,12 @@ export class ProducerResolver {
     @FieldResolver(() => [Review])
     async reviews(@Root() producer: Producer) {
       return await ReviewResolver.getReviewsForProducer(producer.id);
+    };
+
+    @FieldResolver(() => Gig)
+    async lastGig(@Root() producer: Producer) {
+        const lastGig = await Gig.findOne({where: {producer: producer}, order: {date: 'DESC'}})
+        return lastGig
     };
     
 }

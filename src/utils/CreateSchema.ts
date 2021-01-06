@@ -1,4 +1,4 @@
-import { buildSchemaSync, createResolversMap } from 'type-graphql';
+import { buildSchemaSync, createResolversMap, AuthChecker } from 'type-graphql';
 import { gql } from 'apollo-server-core';
 import { printSchema, buildFederatedSchema } from '@apollo/federation';
 import { GigResolver } from '../resolvers/gig/gig';
@@ -11,6 +11,9 @@ import { ReviewResolver } from '../resolvers/user/review';
 import { AddressResolver } from '../resolvers/user/address';
 import { MessageResolver } from '../resolvers/chat/message';
 import { ChatRoomResolver } from '../resolvers/chat/chatRoom';
+import { AuthResolver } from '../resolvers/user/auth';
+import { authChecker } from '../middleware/authChecker';
+
 
 export const compiledSchema = buildSchemaSync({
     resolvers: [ 
@@ -23,7 +26,8 @@ export const compiledSchema = buildSchemaSync({
         ReviewResolver,
         AddressResolver,
         MessageResolver,
-        ChatRoomResolver
+        ChatRoomResolver,
+        AuthResolver
     ]
 });
 

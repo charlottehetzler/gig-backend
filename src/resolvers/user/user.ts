@@ -113,6 +113,11 @@ export class UserResolver {
         return chatRooms;
     };
 
+    @FieldResolver(() => [ChatRoom])
+    async lastReview(@Root() user: GigUser) {
+        return await Review.findOne({where: {user: user}, order: {createdAt: 'DESC'}});
+    };
+
     static async getReviewGiver(reviewId: number) : Promise <GigUser> {
         const review = await Review.findOne({where: {id: reviewId}, relations: ['user']});
         return await GigUser.findOne(review.fromUserId);

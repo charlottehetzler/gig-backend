@@ -4,7 +4,7 @@ import http, { createServer } from 'http';
 import { config } from '../config/index';
 import { createConnection } from "typeorm";
 import * as databaseConfig from '../ormconfig';
-import { ApolloServer, PubSub } from 'apollo-server-express';
+import { ApolloServer } from 'apollo-server-express';
 import { schema } from "./utils/CreateSchema";
 
 export class Server {
@@ -15,14 +15,7 @@ export class Server {
     constructor() {
         this.setupExecpetionHandling();
         this.apolloServer = new ApolloServer({ 
-            schema: schema, 
-            subscriptions: {
-                path: '/subscriptions',
-                onConnect: async (connectionParams, webSocket) => {
-                    console.log('xxx');
-                    console.log(connectionParams);
-                },
-            } 
+            schema: schema
         });
         this.app = express();
         this.server = http.createServer(this.app);

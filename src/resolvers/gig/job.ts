@@ -1,9 +1,10 @@
-import { Resolver, Query, Arg, FieldResolver, Root, InputType, Field, Mutation } from 'type-graphql';
+import { Resolver, Query, Arg, FieldResolver, Root, InputType, Field, Mutation, Authorized } from 'type-graphql';
 import { Category } from '../../entity/gig/category';
 import { Job } from '../../entity/gig/job';
 import { Producer } from '../../entity/user/producer';
 import { JobProducerRelation } from '../../entity/gig/jobProducerRelation';
 import { JobProducerRelationResolver } from './jobProducerRelation';
+import logger from '../../logger/logger';
 
 @InputType()
 export class JobQuery {
@@ -51,7 +52,7 @@ export class JobResolver {
   }
   @Query(returns => [Job])
   async getAllJobsForProducer (
-    @Arg('query', () => JobQuery) query: JobQuery,
+    @Arg('query', () => JobQuery) query: JobQuery
     ) : Promise <Job[]> {
       try {
         return await JobProducerRelationResolver.getJobsForProducer(query.userId)
@@ -95,19 +96,28 @@ export class JobResolver {
   @Mutation(() => Job)
   async createJob(@Arg('input') input: JobQuery): Promise<Job> {
     try {
+      logger.info(`creating job for producer ${input.producerId} and job ${input.name}`)
+      
+      const producer = await Producer.findOne(input.producerId);
+      const taken = await Job.findOne({where: {producer: producer, name: input.name}});
+      if (taken) throw `You already signed up for this job.`;
+      const category = await Category.findOne(input.categoryId);
+      
       const job = new Job();
       job.name = input.name;
-      const category = await Category.findOne(input.categoryId);
       job.category = category
       const newJob = await job.save();
-      const producer = await Producer.findOne(input.producerId);
+      
       const relation = new JobProducerRelation();
       relation.job = newJob;
       relation.jobId = newJob.id;
       relation.producerId = input.producerId;
       relation.producer = producer;
       await relation.save();
+      
+      logger.info(`Successfull created new Job${newJob.name, newJob.id}`)
       return newJob;
+
     } catch (error) {
       throw `JobResolver.createJob errored: Error-Msg: ${error}`
     }

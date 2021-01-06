@@ -47,8 +47,6 @@ export class AddressQuery {
 
 @Resolver()
 export class AddressResolver {
-
-    //update + add Address
     @Mutation(() => Address)
     async updateAddress(@Arg('input') input: AddressQuery): Promise<Address> {
         let data = (input as unknown) as Address;

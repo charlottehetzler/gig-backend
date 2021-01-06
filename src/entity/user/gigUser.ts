@@ -29,10 +29,18 @@ export enum UserType {
 
     @Column({ nullable: false })
     @Field({ nullable: false })
-    email: string;
+    email: string;   
+    
+    @Column({ nullable: true })
+    @Field({ nullable: true })
+    hashedPassword: string;
 
-    @Column({ nullable: false })
-    @Field({ nullable: false })
+    @Column({ default: 0, nullable: true })
+    @Field({ nullable: true })
+    loginAttempts: number;
+
+    @Column({ nullable: true })
+    @Field({ nullable: true })
     birthday: Date;
 
 	@Column({ nullable: true })
