@@ -14,6 +14,10 @@ import { SkillUserRelation } from "./skillUserRelation";
     @Field({ nullable: false })
     name: string;
 
+    @Column({ nullable: true })
+    @Field({ nullable: true })
+    description: string;
+
     @CreateDateColumn({ nullable: false })
     @Field(type => GraphQLISODateTime)
     createdAt: Date;

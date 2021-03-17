@@ -1,8 +1,11 @@
-import { Resolver, Query, Arg, InputType, Field, Mutation } from 'type-graphql';
+import { Resolver, Query, Arg, InputType, Field, Mutation, FieldResolver, Root } from 'type-graphql';
 import { Skill } from '../entity/skill';
 import { GigUser } from '../entity/gigUser';
 import { getRepository } from 'typeorm';
 import { Review } from '../entity/review';
+import { ChatRoom } from '../entity/chatRoom';
+import { ChatRoomUser } from '../entity/chatRoomUser';
+import { SkillUserRelation } from '../entity/skillUserRelation';
 
 @InputType()
 export class UserQuery {
@@ -12,16 +15,16 @@ export class UserQuery {
     @Field({ nullable: true })
     skillId?: number;
   
-    @Field({ nullable: false })
+    @Field({ nullable: true })
     firstName?: string;
 
-    @Field({ nullable: false })
+    @Field({ nullable: true })
     lastName?: string;
 
-    @Field({ nullable: false })
+    @Field({ nullable: true })
     email?: string;
 
-    @Field({ nullable: false })
+    @Field({ nullable: true })
     birthday?: Date;
 
     @Field({ nullable: true })
@@ -46,34 +49,79 @@ export class ReviewQuery {
     comment?: string;
 }
 
-@Resolver()
+@Resolver(of => GigUser)
 export class UserResolver {
-//PRODUCERS
-    // Get Producers for Gig
+
     @Query(returns => [GigUser])
     async getProducersForSkill (
         @Arg('query', () => UserQuery) query: UserQuery,
         @Arg('first', { defaultValue: 10 }) first: number = 10,
         @Arg('offset', { defaultValue: 0 }) offset: number = 0,
     ) : Promise <GigUser[]> {
-            const skill = await Skill.findOne(query.skillId);
-            return await GigUser.find({where: {skill: skill, isConsumer: false}, relations: ['skill'] });
+            let producers : GigUser[] = [];
+            const relations = await SkillUserRelation.find({where: {skillId: query.skillId}});
+            for (const relation of relations) {
+                const user = await GigUser.findOne({where: {id: relation.userId}, relations: ['reviews']});
+                producers.push(user);
+            }
+            return producers;
     }
 
-    // Get one producer 
     @Query(returns => [GigUser])
     async getOneProducer(@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
         return await GigUser.findOne({where: {id: query.userId, isConsumer: false}});
     }
 
-//PROFILE
-    // Get Profile Info
     @Query(returns => GigUser)
-    async getUser (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
-        return await GigUser.findOne({where: {id: query.userId}, relations: ['reviews']})
+    async getUser(@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
+        return await GigUser.findOne({where: {id: query.userId}, relations: ['reviews', 'chatRoomUsers', 'messages']})
     }
 
-    //update Profile
+    @Query(returns => GigUser)
+    async getUserForChat (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
+        return await GigUser.findOne({where: {id: query.userId}, relations: ['reviews', 'chatRoomUsers', 'messages']})
+    }
+
+    @Query(returns =>[Review])
+    async getReviewsForUser (@Arg('userId') userId: number) : Promise <Review[]> {
+        const user = await GigUser.findOne(userId);
+        return await Review.find({where: {user: user}});
+    }
+
+    @FieldResolver(() => Number)
+    async avgRating(@Root() user: GigUser) {
+        const reviews = await Review.find({where: {user: user}, relations: ['user']})
+
+        let reviewCount = 0;
+        let ratingCount = 0;
+        let averageRating = 0;
+        
+        for (const review of reviews) {
+            reviewCount += 1;
+            ratingCount += parseInt(review.rating);
+        } 
+        if (reviewCount !== 0) averageRating = ratingCount / reviewCount;
+        
+        return averageRating.toFixed(2);
+    };
+    
+    @FieldResolver(() => [ChatRoom])
+    async allChatRooms(@Root() user: GigUser) {
+        const chatRoomUsers = await ChatRoomUser.find({where: {user: user}, relations: ['chatRoom', 'user'], order: {updatedAt: 'DESC'}});
+        let chatRooms : ChatRoom[] = [];
+        for (const chatRoomUser of chatRoomUsers) {
+            const chatRoom = await ChatRoom.findOne(chatRoomUser.chatRoom.id);
+            chatRooms.push(chatRoom);
+        };
+        return chatRooms;
+    };
+    
+    @FieldResolver(() => [Review])
+    async lastReviews(@Root() user: GigUser) {
+        return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
+    };
+
+
     @Mutation(() => GigUser)
     async updateProfile(@Arg('input') input: UserQuery): Promise<GigUser> {
         let data = (input as unknown) as GigUser;
@@ -94,32 +142,8 @@ export class UserResolver {
         return user;
     }
 
-
-    //get all reviews for user
-    @Query(returns =>[Review])
-    async getReviewsForUser (@Arg('userId') userId: number) : Promise <Review[]> {
-        const user = await GigUser.findOne(userId);
-        return await Review.find({where: {user: user}});
-    }
-
-    //add a review
-    @Mutation(() => Review)
-    async addReview(@Arg('input') input: ReviewQuery): Promise<Review> {
-        let data = (input as unknown) as Review;
-        
-        let query: any = undefined;
-        if(input.reviewId) query = { id: input.reviewId };
-        if(query !== undefined) {
-            const existing = await getRepository(Review).findOne(query);
-            if (existing) {
-                const tmp: any = {
-                    ...existing,
-                    ...input
-                };
-                data = tmp as Review;
-            }
-        }
-        const review = await getRepository(Review).save(data);
-        return review;
+    static async getReviewGiver(reviewId: number) : Promise <GigUser> {
+        const review = await Review.findOne({where: {id: reviewId}, relations: ['user']});
+        return await GigUser.findOne(review.fromUserId);
     }
 }

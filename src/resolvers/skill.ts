@@ -19,6 +19,9 @@ export class SkillQuery {
 
   @Field({nullable: true})
   name?: string;
+
+  @Field({nullable: true})
+  description?: string;
 }
 
 @Resolver(of => Skill)
@@ -30,7 +33,7 @@ export class SkillResolver {
     @Arg('offset', { defaultValue: 0 }) offset: number = 0,
   ) : Promise <Skill[]> {
     try {
-      return await Skill.find({take: first, skip: offset, relations: ['category']});
+      return await Skill.find({take: first, skip: offset});
     } catch (error) {
       throw `SkillResolver.getAllSkills errored: Error-Msg: ${error}`
     }
@@ -87,7 +90,7 @@ export class SkillResolver {
   };
 
   @FieldResolver(() => Category)
-  async gigCategory(@Root() skill: Skill) {
+  async category(@Root() skill: Skill) {
     return await Category.findOne(skill.category)
   };
 
@@ -97,9 +100,7 @@ export class SkillResolver {
     try {
       logger.info(`adding skill for user ${input.userId} and skill ${input.name}`)
       
-      const user = await GigUser.findOne({where: {id: input.userId, isConsumer: false}});
-      const taken = await Skill.findOne({where: {user: user, name: input.name}});
-      if (taken) throw `You already signed up for this skill.`;
+      const user = await GigUser.findOne(input.userId);
       
       const category = await Category.findOne(input.categoryId);
       const skill = new Skill();

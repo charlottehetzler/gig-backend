@@ -5,14 +5,20 @@ import { CategoryResolver } from '../resolvers/category';
 import { UserResolver } from '../resolvers/user';
 import { MessageResolver } from '../resolvers/message';
 import { ChatRoomResolver } from '../resolvers/chatRoom';
+import { SkillResolver } from '../resolvers/skill';
+import { SkillUserRelationResolver } from '../resolvers/skillUserRelation';
+import { ReviewResolver } from '../resolvers/review';
 
 
 export const compiledSchema = buildSchemaSync({
     resolvers: [ 
-        CategoryResolver, 
-        UserResolver, 
-        MessageResolver,
+        CategoryResolver,
         ChatRoomResolver,
+        MessageResolver,
+        SkillResolver,
+        SkillUserRelationResolver,
+        ReviewResolver,
+        UserResolver, 
     ]
 });
 
