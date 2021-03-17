@@ -29,7 +29,7 @@ import { GigUser } from "./gigUser";
     @Field(() => GraphQLISODateTime)
     updatedAt: Date;
 
-    @ManyToOne(type => GigUser, user => user.addresses)
+    @ManyToOne(type => GigUser, user => user.reviews)
     @JoinColumn({ name: 'userId' })
     @Field(type => GigUser)
     user: GigUser;
