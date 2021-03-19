@@ -52,6 +52,10 @@ export enum UserType {
     @Field({ nullable: false })
     nativeLanguage: string;
 
+    @Column({ nullable: true })
+    @Field({ nullable: true })
+    phoneNumber: string;
+
     @CreateDateColumn({ nullable: false })
     @Field(type => GraphQLISODateTime)
     createdAt: Date;
