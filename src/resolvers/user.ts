@@ -13,6 +13,9 @@ export class UserQuery {
     userId?: number;
 
     @Field({ nullable: true })
+    currentUserId?: number;
+
+    @Field({ nullable: true })
     skillId?: number;
   
     @Field({ nullable: true })
@@ -61,8 +64,10 @@ export class UserResolver {
             let producers : GigUser[] = [];
             const relations = await SkillUserRelation.find({where: {skillId: query.skillId}});
             for (const relation of relations) {
-                const user = await GigUser.findOne({where: {id: relation.userId}, relations: ['reviews']});
-                producers.push(user);
+                if (relation.userId !== query.currentUserId) {
+                    const user = await GigUser.findOne({where: {id: relation.userId}, relations: ['reviews']});
+                    producers.push(user);
+                }
             }
             return producers;
     }
