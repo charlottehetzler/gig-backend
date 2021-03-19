@@ -118,7 +118,6 @@ export class ChatRoomResolver {
 
     async getCommonChat(currentUserChatRooms: ChatRoomUser[], userChatRooms: ChatRoomUser[]) {
         for (const currentUserChatRoom of currentUserChatRooms) {
-            console.log(currentUserChatRoom)
             for (const userChatRoom of userChatRooms) {
                 if (currentUserChatRoom.chatRoom.id === userChatRoom.chatRoom.id) {
                     return await ChatRoom.findOne(userChatRoom.chatRoom.id);
