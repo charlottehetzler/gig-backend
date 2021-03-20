@@ -123,6 +123,26 @@ export class SkillResolver {
     }
   }
 
+  @Mutation(() => Boolean)
+  async deleteSkill(@Arg('input') input: SkillQuery): Promise<Boolean> {
+    try {
+      logger.info(`deleting skill for user ${input.userId} and skill ${input.name}`)
+      
+      const user = await GigUser.findOne(input.userId);
+      const skill = await Skill.findOne(input.skillId);
+
+      const relation = await SkillUserRelation.findOne({where: {user: user, skill: skill} });
+      relation.isPersonal = false;
+      await relation.save();
+      
+      logger.info(`Successfull deleted skill ${input.skillId} for user ${input.userId}`)
+      return true;
+
+    } catch (error) {
+      throw `SkillResolver.deleteSkill errored: Error-Msg: ${error}`
+    }
+  }
+
   static async getAllSkillsForUser (query: SkillQuery, first: number, offset: number) : Promise<Skill[]> {
     try {
       let newQuery = {};
