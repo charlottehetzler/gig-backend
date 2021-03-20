@@ -11,6 +11,10 @@ import { GigUser } from "./gigUser";
   id: string;
 
   @Field({ nullable: false})
+  @Column({ nullable: false, default: true})
+  isPersonal: boolean;
+
+  @Field({ nullable: false})
   @Column({ nullable: false})
   skillId: number;
 
