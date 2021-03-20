@@ -42,6 +42,7 @@ export class ReviewResolver {
     return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
   }
 
+
   @FieldResolver(() => GigUser)
   async fromUser(@Root() review: Review) {
     return await UserResolver.getReviewGiver(review.id);

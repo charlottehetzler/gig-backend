@@ -32,6 +32,13 @@ export class UserQuery {
 
     @Field({ nullable: true })
     profilePicture?: string;
+    
+    @Field({ nullable: true })
+    nativeLanguage?: string;
+
+    @Field({ nullable: true })
+    phoneNumber?: string;
+
 }
 
 @InputType()
@@ -87,12 +94,6 @@ export class UserResolver {
         return await GigUser.findOne({where: {id: query.userId}, relations: ['reviews', 'chatRoomUsers', 'messages']})
     }
 
-    @Query(returns =>[Review])
-    async getReviewsForUser (@Arg('userId') userId: number) : Promise <Review[]> {
-        const user = await GigUser.findOne(userId);
-        return await Review.find({where: {user: user}});
-    }
-
     @FieldResolver(() => Number)
     async avgRating(@Root() user: GigUser) {
         const reviews = await Review.find({where: {user: user}, relations: ['user']})
@@ -126,25 +127,28 @@ export class UserResolver {
         return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
     };
 
-
     @Mutation(() => GigUser)
     async updateProfile(@Arg('input') input: UserQuery): Promise<GigUser> {
-        let data = (input as unknown) as GigUser;
-        
-        let query: any = undefined;
-        if(input.userId) query = { id: input.userId };
-        if(query !== undefined) {
-            const existing = await getRepository(GigUser).findOne(query);
-            if (existing) {
-                const tmp: any = {
-                    ...existing,
-                    ...input
-                };
-                data = tmp as GigUser;
+        try {
+            let data = (input as unknown) as GigUser;
+            let query: any = undefined;
+            if (input.userId) query = { id: input.userId };
+            if (query !== undefined) {
+                const existing = await getRepository(GigUser).findOne(query);
+                if (existing) {
+                    const tmp: any = {
+                        ...existing,
+                        ...input
+                    };
+                    data = tmp as GigUser;
+                }
             }
+            const user = await getRepository(GigUser).save(data);
+            return user;
+        } catch (error) {
+            throw `UserResolver.updateProfile errored. Error-Msg.: ${error}`;
         }
-        const user = await getRepository(GigUser).save(data);
-        return user;
+
     }
 
     static async getReviewGiver(reviewId: number) : Promise <GigUser> {
