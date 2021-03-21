@@ -32,11 +32,11 @@ import { Language } from "./language";
   @Field({ nullable: true})
   @Field({ nullable: true })
   @CreateDateColumn()
-  createdDate: Date;
+  createdAt: Date;
 
   @Field({ nullable: true})
   @Field({ nullable: true })
   @UpdateDateColumn()
-  updatedDate: Date;
+  updatedAt: Date;
 
 }
