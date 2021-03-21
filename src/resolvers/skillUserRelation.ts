@@ -77,7 +77,7 @@ export class SkillUserRelationResolver {
         if (!user) {
           throw `SkillUserRelationResolver.getSkillsForProducer errored: no producer found with userId: ${userId}`
         }
-        const relations = await SkillUserRelation.find({where: {userId: user.id}});
+        const relations = await SkillUserRelation.find({where: {userId: user.id, isPersonal: true}});
         for (const relation of relations) {
           const skill = await Skill.findOne({ where: {id: relation.skillId} });
           skills.push(skill);
