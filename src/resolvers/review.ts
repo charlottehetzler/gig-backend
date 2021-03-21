@@ -107,6 +107,15 @@ export class ReviewResolver {
       review.fromUserId = input.fromUserId;
       review.rating = input.rating;
       review.comment = input.comment;
+      
+      if (input.skillId) {
+        const skill =  await Skill.findOne(input.skillId);
+        if (skill) {
+          review.skill = skill;
+          review.skillId = skill.id;  
+        }
+      }
+      
       await review.save();
       return review;
     } else {

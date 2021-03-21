@@ -87,6 +87,35 @@ export class SkillResolver {
     }
   }
 
+  @Query(returns => [Skill])
+  async getAvailableSkillsForProducer (@Arg('query', () => SkillQuery) query: SkillQuery) : Promise <Skill[]> {
+    try {
+      let userSkills: Skill[] = [];
+      let availableSkills: Skill[] = [];
+      
+      const user = await GigUser.findOne(query.userId);
+      if (!user) throw `SkillResolver.getAvailableSkillsForProducer errored: Couldn't find user with id ${query.userId}`;
+      
+      const relations = await SkillUserRelation.find({ where: {user: user, isPersonal: true}});
+      for (const relation of relations) {
+        const skill = await Skill.findOne(relation.skillId);
+        userSkills.push(skill);
+      }
+
+      const allSkills = await Skill.find();
+      for (const skill of allSkills) {
+        for (const userSkill of userSkills) {
+          if (skill.id !== userSkill.id) {
+            availableSkills.push(skill);
+          }
+        }
+      }
+      return availableSkills;
+    } catch (error) {
+      throw `SkillResolver.getAllSkillsForProducer errored: Error-Msg: ${error}`
+    }
+  }
+
   @FieldResolver(() => [SkillUserRelation])
   async producers(@Root() skill: Skill) {
     return await SkillUserRelationResolver.getProducersForSkill({ skillId: skill.id }, 0, 0);
