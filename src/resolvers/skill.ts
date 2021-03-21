@@ -22,6 +22,9 @@ export class SkillQuery {
 
   @Field({nullable: true})
   description?: string;
+
+  @Field({nullable: true})
+  isPersonal?: boolean;
 }
 
 @Resolver(of => Skill)
@@ -103,16 +106,21 @@ export class SkillResolver {
       const user = await GigUser.findOne(input.userId);
       
       const category = await Category.findOne(input.categoryId);
+      if (!category) throw `SkillResolver.addSkill errored: Couldn't find category with id ${input.categoryId}`;
+
       const skill = new Skill();
       skill.name = input.name;
-      skill.category = category
+      skill.category = category;
+      if(input.description) skill.description = input.description;
       const newSkill = await skill.save();
-      
+
       const relation = new SkillUserRelation();
       relation.skill = newSkill;
       relation.skillId = newSkill.id;
       relation.userId = input.userId;
       relation.user = user;
+      relation.isPersonal = input.isPersonal;
+
       await relation.save();
       
       logger.info(`Successfull created new Skill ${newSkill.name, newSkill.id}`)
@@ -120,26 +128,6 @@ export class SkillResolver {
 
     } catch (error) {
       throw `SkillResolver.addSkill errored: Error-Msg: ${error}`
-    }
-  }
-
-  @Mutation(() => Boolean)
-  async deleteSkill(@Arg('input') input: SkillQuery): Promise<Boolean> {
-    try {
-      logger.info(`deleting skill for user ${input.userId} and skill ${input.name}`)
-      
-      const user = await GigUser.findOne(input.userId);
-      const skill = await Skill.findOne(input.skillId);
-
-      const relation = await SkillUserRelation.findOne({where: {user: user, skill: skill} });
-      relation.isPersonal = false;
-      await relation.save();
-      
-      logger.info(`Successfull deleted skill ${input.skillId} for user ${input.userId}`)
-      return true;
-
-    } catch (error) {
-      throw `SkillResolver.deleteSkill errored: Error-Msg: ${error}`
     }
   }
 

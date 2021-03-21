@@ -1,22 +1,58 @@
-import { Resolver, InputType, Field, } from 'type-graphql';
+import { Resolver, InputType, Field, Mutation, Arg, } from 'type-graphql';
 import { Category } from '../entity/category';
 import { GigUser } from '../entity/gigUser';
 import { SkillUserRelation } from '../entity/skillUserRelation';
 import { Skill } from '../entity/skill';
+import logger from '../logger/logger';
 
 
 @InputType()
 export class SkillUserRelationQuery {
-  @Field()
+  @Field({nullable: true})
   userId?: number;
 
-  @Field()
+  @Field({nullable: true})
   skillId?: number;
+
+  @Field({nullable: true})
+  isPersonal?: boolean;
 }
 
 @Resolver(of => Category)
 export class SkillUserRelationResolver {
 
+  @Mutation(() => Boolean)
+  async updateRelation(@Arg('input') input: SkillUserRelationQuery): Promise<Boolean> {
+    try {
+      logger.info(`SkillUserRelationResolver.updateRelation for userId ${input.userId} and skillId ${input.skillId}`);
+      
+      const user = await GigUser.findOne(input.userId);
+      
+      const skill = await Skill.findOne(input.skillId);
+      
+      if (!input.isPersonal) {
+        const relation = await SkillUserRelation.findOne({where: {user: user, skill: skill} });
+        if (relation) {
+          relation.isPersonal = input.isPersonal;
+          await relation.save();
+          logger.info(`Successfully deleted skill ${input.skillId} for user ${input.userId}`)
+        }
+      } else {
+        const relation = new SkillUserRelation();
+        relation.skill = skill;
+        relation.skillId = skill.id;
+        relation.userId = input.userId;
+        relation.user = user;
+        relation.isPersonal = input.isPersonal;
+        relation.save();
+        logger.info(`Successfully added skill ${input.skillId} for user ${input.userId}`)
+      }
+      return true;
+    } catch (error) {
+      throw `SkillUserRelationResolver.updateRelation: Error-Msg: ${error}`
+    }
+  }
+  
   static async getProducersForSkill( query: SkillUserRelationQuery, first: number, offset: number) : Promise<GigUser[]> {
     try {
       if (query.skillId) {

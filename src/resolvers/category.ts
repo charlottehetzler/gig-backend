@@ -24,7 +24,7 @@ export class CategoryResolver {
     @Arg('first', { defaultValue: 10 }) first: number = 10,
     @Arg('offset', { defaultValue: 0 }) offset: number = 0,
   ) : Promise <Category[]> {
-    return await Category.find({ take: first, skip: offset, relations: ['skill']});
+    return await Category.find({ take: first, skip: offset, relations: ['skills']});
   }
 
   @Query(returns => Category)
