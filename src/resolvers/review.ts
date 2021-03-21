@@ -42,6 +42,7 @@ export class ReviewResolver {
     return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
   }
 
+  //TODO: include skill relation
   @Query(returns => Boolean)
   async getSubmittedReview (@Arg('query') query : ReviewQuery) {
     const user = await GigUser.findOne(query.userId);
