@@ -6,6 +6,8 @@ import { Review } from '../entity/review';
 import { ChatRoom } from '../entity/chatRoom';
 import { ChatRoomUser } from '../entity/chatRoomUser';
 import { SkillUserRelation } from '../entity/skillUserRelation';
+import { Language } from '../entity/language';
+import { LanguageUserRelation } from '../entity/languageUserRelation';
 
 @InputType()
 export class UserQuery {
@@ -97,6 +99,18 @@ export class UserResolver {
         
         return averageRating.toFixed(2);
     };
+
+    @FieldResolver(() => [Language])
+    async languages(@Root() user: GigUser) {
+        let languages: Language[] = [];
+        const relations = await LanguageUserRelation.find({ where: {user: user} });
+        for (const relation of relations) {
+            const language =  await Language.findOne(relation.languageId);
+            languages.push(language);
+        }
+        return languages;
+    };
+
     
     @FieldResolver(() => [ChatRoom])
     async allChatRooms(@Root() user: GigUser) {

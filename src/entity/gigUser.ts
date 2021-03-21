@@ -79,4 +79,5 @@ export enum UserType {
     @OneToMany(type => Message, message => message.user, {cascade: true})
     @Field(type => [Message], { nullable: true })
     messages: Message[];
+
 }
