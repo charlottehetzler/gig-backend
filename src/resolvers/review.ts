@@ -42,6 +42,17 @@ export class ReviewResolver {
     return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
   }
 
+  @Query(returns => Boolean)
+  async getSubmittedReview (@Arg('query') query : ReviewQuery) {
+    const user = await GigUser.findOne(query.userId);
+    const submittedReview = await Review.findOne({where: {user: user, fromUserId: query.fromUserId} });
+    if (submittedReview) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 
   @FieldResolver(() => GigUser)
   async fromUser(@Root() review: Review) {

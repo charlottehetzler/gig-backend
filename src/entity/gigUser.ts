@@ -48,6 +48,10 @@ export enum UserType {
     @Field({ nullable: false })
     isConsumer: boolean;
 
+    @Column({ nullable: false, default: true })
+    @Field({ nullable: false })
+    isCallable: boolean;
+
     @Column({ nullable: false, default: 'English' })
     @Field({ nullable: false })
     nativeLanguage: string;

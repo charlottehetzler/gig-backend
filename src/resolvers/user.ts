@@ -39,25 +39,11 @@ export class UserQuery {
     @Field({ nullable: true })
     phoneNumber?: string;
 
+    @Field({ nullable: true })
+    isCallable?: boolean;
+
 }
 
-@InputType()
-export class ReviewQuery {
-    @Field({ nullable: true })
-    reviewId?: number;
-
-    @Field({ nullable: true })
-    fromUserId?: number;
-
-    @Field({ nullable: true })
-    toUserId?: number;
-
-    @Field({ nullable: true })
-    rating?: number;
-  
-    @Field({ nullable: false })
-    comment?: string;
-}
 
 @Resolver(of => GigUser)
 export class UserResolver {
@@ -70,6 +56,7 @@ export class UserResolver {
     ) : Promise <GigUser[]> {
             let producers : GigUser[] = [];
             const relations = await SkillUserRelation.find({where: {skillId: query.skillId}});
+
             for (const relation of relations) {
                 if (relation.userId !== query.currentUserId) {
                     const user = await GigUser.findOne({where: {id: relation.userId}, relations: ['reviews']});
