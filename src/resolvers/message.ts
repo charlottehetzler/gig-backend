@@ -34,7 +34,7 @@ export class MessageResolver {
             const chatRoom = await ChatRoom.findOne(query.chatRoomId);
             return await Message.find({where: {chatRoom: chatRoom}, order: {createdAt: 'DESC'}, relations: ['user', 'chatRoom']});
         } catch (error) {
-            throw `MessageResolver.getMessagesByChatRoom errored. Error Msg: ${error}`;            
+            throw new Error (`ChatRoomResolver.createMessage errored. Error-Msg.: ${error}`);      
         }
     }
 
@@ -54,7 +54,7 @@ export class MessageResolver {
             await publish(message);
             return message;
         } catch (error) {
-            throw `MessageResolver.createMessage errored for user: ${input.userId}, chatRoomId: ${input.chatRoomId}. Error Msg: ${error}`;
+            throw new Error (`ChatRoomResolver.createMessage errored. Error-Msg.: ${error}`);      
         }
     }
 

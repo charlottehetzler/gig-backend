@@ -49,7 +49,7 @@ export class ChatRoomResolver {
             });
             return chatRooms;
         } catch (error) {
-            throw `ChatRoomResolver.getMessagesByChatRoom errored. Error Msg: ${error}`;            
+            throw new Error (`ChatRoomResolver.getChatRoomsForUser errored. Error-Msg.: ${error}`);      
         }
     }
 
@@ -68,9 +68,8 @@ export class ChatRoomResolver {
             if (currentUserChatRooms.length > 0 && userChatRooms.length > 0 ) {
                 return await this.getCommonChat(currentUserChatRooms, userChatRooms);
             }
-            
         } catch (error) {
-            throw `ChatRoomResolver.getCommonChatRoom errored. Error Msg: ${error}`;            
+            throw new Error (`ChatRoomResolver.getCommonChatRoom errored. Error-Msg.: ${error}`);      
         }
     }
 
@@ -94,7 +93,7 @@ export class ChatRoomResolver {
             await chatRoom.save();
             return chatRoom;
         } catch (error) {
-            throw `ChatRoomResolver.updateChatRoomLastMessage errored for lastMessageId: ${input.lastMessageId}. Error Msg: ${error}`;
+            throw new Error (`ChatRoomResolver.updateChatRoomLastMessage errored. Error-Msg.: ${error}`);      
         }
     }
 
@@ -112,7 +111,7 @@ export class ChatRoomResolver {
             
             return chatRoom
         } catch (error) {
-            throw `ChatRoomResolver.createChatRoom errored for currentUserId: ${input.currentUserId}, userId: ${input.userId}. Error Msg: ${error}`;
+            throw new Error (`ChatRoomResolver.createChatRoom errored. Error-Msg.: ${error}`);      
         }
     }
 

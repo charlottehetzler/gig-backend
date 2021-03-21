@@ -38,7 +38,7 @@ export class SkillResolver {
     try {
       return await Skill.find({take: first, skip: offset});
     } catch (error) {
-      throw `SkillResolver.getAllSkills errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.getAllSkills errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -47,7 +47,7 @@ export class SkillResolver {
     try {
       return await Skill.findOne(query.skillId);
     } catch (error) {
-      throw `SkillResolver.getOneskill errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.getOneskill errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -74,7 +74,7 @@ export class SkillResolver {
       }
       return await Skill.find({ where: newQuery, take: first, skip: offset, relations: ['category']});
     } catch (error) {
-      throw `SkillResolver.getAllSkillsForProducerOrCategory errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.getAllSkillsForProducerOrCategory errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -83,7 +83,7 @@ export class SkillResolver {
     try {
       return await SkillUserRelationResolver.getSkillsForProducer(query.userId)
     } catch (error) {
-      throw `SkillResolver.getAllSkillsForProducer errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.getAllSkillsForProducer errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -112,7 +112,7 @@ export class SkillResolver {
       }
       return availableSkills;
     } catch (error) {
-      throw `SkillResolver.getAllSkillsForProducer errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.getAllSkillsForProducer errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -156,7 +156,7 @@ export class SkillResolver {
       return newSkill;
 
     } catch (error) {
-      throw `SkillResolver.addSkill errored: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.addSkill errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -174,7 +174,7 @@ export class SkillResolver {
       return await Skill.find({ where: newQuery, take: first, skip: offset, relations: ['category', 'user']});
 
     } catch (error) {
-      throw `errored: Error-Msg: ${error}`;
+      throw new Error (`SkillResolver.getAllSkillsForUser errored. Error-Msg.: ${error}`);
     }
   }
 

@@ -49,7 +49,7 @@ export class SkillUserRelationResolver {
       }
       return true;
     } catch (error) {
-      throw `SkillUserRelationResolver.updateRelation: Error-Msg: ${error}`
+      throw new Error (`SkillResolver.updateRelation errored. Error-Msg.: ${error}`);
     }
   }
   
@@ -65,7 +65,7 @@ export class SkillUserRelationResolver {
         return producers;
       }
     } catch (error) {
-      throw `SkillUserRelationResolver.getProducersForSkill errored: Error-Msg: ${error}`;
+      throw new Error (`SkillResolver.getProducersForSkill errored errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -85,7 +85,7 @@ export class SkillUserRelationResolver {
         return skills;
       }
     } catch (error) {
-      throw `SkillUserRelationResolver.getSkillsForProducer errored: Error-Msg: ${error}`;
+      throw new Error (`SkillResolver.getSkillsForProducer errored. Error-Msg.: ${error}`);
     }
   }
 
