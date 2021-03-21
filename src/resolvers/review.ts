@@ -3,6 +3,7 @@ import { getRepository } from 'typeorm';
 import { UserResolver } from './user';
 import { Review } from '../entity/review';
 import { GigUser } from '../entity/gigUser';
+import { Skill } from '../entity/skill';
 
 @InputType()
 export class ReviewQuery {
@@ -20,6 +21,9 @@ export class ReviewQuery {
   
     @Field({ nullable: true })
     comment?: string;
+
+    @Field({ nullable: true })
+    skillId?: number;
 }
 
 @Resolver(of => Review)
@@ -33,13 +37,27 @@ export class ReviewResolver {
     @Arg('offset', { defaultValue: 0 }) offset: number = 0,
   ) : Promise <Review[]> {
     const user = await GigUser.findOne(query.userId);
-    return await Review.find({where: {user: user}, order: {createdAt: 'DESC'}});
+    let reviews;
+    if (query.skillId) {
+      const skill = await Skill.findOne(query.skillId);
+      reviews = Review.find({ where: {user: user, skill: skill}, order: {createdAt: 'DESC'} });
+    } else {
+      reviews = Review.find({ where: {user: user}, order: {createdAt: 'DESC'} });
+    }
+    return reviews;
   }
 
   @Query(returns => [Review])
-  async getLastReviewsForUser (@Arg('query') query : ReviewQuery) {
+  async getLastReviewsForUser (@Arg('query') query : ReviewQuery): Promise<Review[]> {
     const user = await GigUser.findOne(query.userId);
-    return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
+    let reviews;
+    if (query.skillId) {
+      const skill = await Skill.findOne(query.skillId);
+      reviews = await Review.find({ where: {user: user, skill: skill}, take: 10, order: {createdAt: 'DESC'} });
+    } else {
+      reviews = await Review.find({ where: {user: user}, take: 10, order: {createdAt: 'DESC'} });
+    }
+    return reviews;
   }
 
   //TODO: include skill relation
@@ -52,6 +70,25 @@ export class ReviewResolver {
     } else {
       return false;
     }
+  }
+
+  @Query(returns => Number)
+  async getAvgRatingForSkill (@Arg('query') query : ReviewQuery) {
+    const user = await GigUser.findOne(query.userId);
+    const skill = await Skill.findOne(query.skillId);
+    const reviews = await Review.find({ where: {user: user, skill: skill}, order: {createdAt: 'DESC'} });
+    
+    let reviewCount = 0;
+    let ratingCount = 0;
+    let averageRating = 0;
+    
+    for (const review of reviews) {
+        reviewCount += 1;
+        ratingCount += parseInt(review.rating);
+    } 
+    if (reviewCount !== 0) averageRating = ratingCount / reviewCount;
+    
+    return averageRating.toFixed(2);
   }
 
 
