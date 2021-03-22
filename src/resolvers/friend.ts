@@ -78,7 +78,7 @@ export class FriendResolver {
         try {
             const friend = await Friend.findOne({where: {currentUserId: input.currentUserId, userId: input.userId, status: FRIEND_STATUS.pending}, order: {createdAt: 'DESC'} });
             
-            if (input.status === 'accpeted') {
+            if (input.status === 'accept') {
                 friend.status = FRIEND_STATUS.accepted;
             } else {
                 friend.status = FRIEND_STATUS.declined;
