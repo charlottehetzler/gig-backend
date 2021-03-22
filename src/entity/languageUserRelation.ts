@@ -29,6 +29,10 @@ import { Language } from "./language";
   @ManyToOne(type => GigUser)
   user: GigUser;
 
+  @Field({ nullable: false})
+  @Column({ nullable: false, default: true})
+  isActive: boolean;
+
   @Field({ nullable: true})
   @Field({ nullable: true })
   @CreateDateColumn()

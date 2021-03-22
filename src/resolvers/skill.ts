@@ -126,7 +126,7 @@ export class SkillResolver {
     return await Category.findOne(skill.category)
   };
 
-  // Add Skill
+
   @Mutation(() => Skill)
   async addSkill(@Arg('input') input: SkillQuery): Promise<Skill> {
     try {
