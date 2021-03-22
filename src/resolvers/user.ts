@@ -1,13 +1,15 @@
 import { Resolver, Query, Arg, InputType, Field, Mutation, FieldResolver, Root } from 'type-graphql';
 import { Skill } from '../entity/skill';
 import { GigUser } from '../entity/gigUser';
-import { getRepository } from 'typeorm';
+import { getRepository, Not } from 'typeorm';
 import { Review } from '../entity/review';
 import { ChatRoom } from '../entity/chatRoom';
 import { ChatRoomUser } from '../entity/chatRoomUser';
 import { SkillUserRelation } from '../entity/skillUserRelation';
 import { Language } from '../entity/language';
 import { LanguageUserRelation } from '../entity/languageUserRelation';
+import { Friend, FRIEND_STATUS } from '../entity/friend';
+import { query } from 'express';
 
 @InputType()
 export class UserQuery {
@@ -81,6 +83,30 @@ export class UserResolver {
     @Query(returns => GigUser)
     async getUserForChat (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser> {
         return await GigUser.findOne({where: {id: query.userId}, relations: ['reviews', 'chatRoomUsers', 'messages']})
+    }
+
+    @Query(returns => [GigUser])
+    async getNewUsers (@Arg('query', () => UserQuery) query: UserQuery) : Promise <GigUser[]> {
+        let allFriends: GigUser[] = [];
+
+        let newUsers = await GigUser.find({ where: {id: Not(query.currentUserId)}, order: {createdAt: 'DESC'}, take: 8 });
+        
+        const friends = await Friend.find({where: {currentUserId: query.currentUserId, status: Not('declined')} });
+        for (const friend of friends) {
+            const user = await GigUser.findOne(friend.userId);
+            allFriends.push(user);
+        }
+
+        for (var i = 0, len = allFriends.length; i < len; i++) { 
+            for (var j = 0, len2 = newUsers.length; j < len2; j++) { 
+                if (allFriends[i].id === newUsers[j].id) {
+                    newUsers.splice(j, 1);
+                    len2=newUsers.length;
+                }
+            }
+        }
+        
+        return newUsers;
     }
 
     @FieldResolver(() => Number)

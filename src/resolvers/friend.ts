@@ -42,6 +42,18 @@ export class FriendResolver {
         }
     }
 
+    @Query(returns => Number)
+    async getNumberOfFriendsForUser (
+        @Arg('query', () => FriendQuery) query: FriendQuery
+    ): Promise <Number> {
+        try {
+            const friends = await Friend.findAndCount({where: {currentUserId: query.currentUserId, status: FRIEND_STATUS.accepted} });
+            return friends[1]
+        } catch (error) {
+            throw new Error (`FriendResolver.getLatestFriendsForUser errored. Error-Msg.: ${error}`);      
+        }
+    }
+
     @Query(returns => [GigUser])
     async getFriendRequestsForUser (
         @Arg('query', () => FriendQuery) query: FriendQuery
@@ -66,7 +78,7 @@ export class FriendResolver {
         try {
             const friend = await Friend.findOne({where: {currentUserId: input.currentUserId, userId: input.userId, status: FRIEND_STATUS.pending}, order: {createdAt: 'DESC'} });
             
-            if (input.status === 'accpeted') {
+            if (input.status === 'accept') {
                 friend.status = FRIEND_STATUS.accepted;
             } else {
                 friend.status = FRIEND_STATUS.declined;
@@ -80,7 +92,7 @@ export class FriendResolver {
     }
 
     @Mutation(returns => Friend)
-    async sendRequest (
+    async sendFriendRequest (
         @Arg('input', () => FriendQuery) input: FriendQuery
     ) : Promise <Friend> {
         try {
