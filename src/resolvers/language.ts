@@ -5,16 +5,23 @@ import { LanguageUserRelation } from '../entity/languageUserRelation';
 import { Not } from 'typeorm';
 
 @InputType()
+export class LanguageId {
+    @Field({ nullable: true })
+    languageId?: number;
+}
+
+@InputType()
 export class LanguageQuery {
     @Field({ nullable: true })
     userId?: number;
 
-    @Field({ nullable: true })
-    languageId?: number;
+    // @Field({ nullable: true})
+    // languageIds?: LanguageId[];
 
     @Field({ nullable: true })
     isActive?: boolean;
 }
+
 
 @Resolver(of => Language)
 export class LanguageResolver {
@@ -79,7 +86,7 @@ export class LanguageResolver {
             
             const nativeLanguage = await Language.findOne({where: {name: user.nativeLanguage}});
             
-            const relations = await LanguageUserRelation.find({where: {userId: user.id, languageId: Not(nativeLanguage.id)} });
+            const relations = await LanguageUserRelation.find({where: {userId: user.id, languageId: Not(nativeLanguage.id), isActive: true} });
             
             for (const relation of relations) {
                 const language = await Language.findOne(relation.languageId);
@@ -94,34 +101,38 @@ export class LanguageResolver {
 
     @Mutation(returns => Boolean)
     async addOrUpdateLanguageForUser (
-        @Arg('input', () => LanguageQuery) input: LanguageQuery
+        @Arg('userId') userId: number,
+        @Arg('languageIds', type => [Number]) languagesIds: number[],
+        @Arg('isActive') isActive: boolean,
     ) : Promise <Boolean> {
         try {
-            const user = await GigUser.findOne(input.userId);
-
-            const language = await Language.findOne(input.languageId);
+            const user = await GigUser.findOne(userId);
 
             const nativeLanguage = await Language.findOne({where: {name: user.nativeLanguage} });
-            
-            if (language === nativeLanguage) {
-                throw new Error(`LanguageResolver.addOrUpdateLanguageForUser cannot add nativeLanguage as additional Language`);
-            }
-
-            const relation = await LanguageUserRelation.findOne({ where: {user: user, language: language} });
+            for (const langId of languagesIds) {
                 
-            if (relation) {
-                relation.isActive = input.isActive;
-                await relation.save();
-            } else {
-                const relation = new LanguageUserRelation ();
-                relation.user = user;
-                relation.userId = user.id;
-                relation.language = language;
-                relation.languageId = language.id
-                relation.isActive = input.isActive;
-                await relation.save();
+                const language = await Language.findOne(langId);
+
+                if (language === nativeLanguage) {
+                    throw new Error(`LanguageResolver.addOrUpdateLanguageForUser cannot add nativeLanguage as additional Language`);
+                }
+
+                const relation = await LanguageUserRelation.findOne({ where: {user: user, language: language} });
+
+
+                if (relation) {
+                    relation.isActive = isActive;
+                    await relation.save();
+                } else {
+                    const relation = new LanguageUserRelation ();
+                    relation.user = user;
+                    relation.userId = user.id;
+                    relation.language = language;
+                    relation.languageId = language.id
+                    relation.isActive = isActive;
+                    await relation.save();
+                }
             }
-            
             return true;
         } catch (error) {
             throw new Error (`LanguageResolver.addOrUpdateLanguageForUser errored. Error-Msg.: ${error}`);      
