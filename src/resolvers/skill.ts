@@ -5,6 +5,7 @@ import { SkillUserRelation } from '../entity/skillUserRelation';
 import logger from '../logger/logger';
 import { GigUser } from '../entity/gigUser';
 import { SkillUserRelationResolver } from './skillUserRelation';
+import { getManager } from 'typeorm';
 
 @InputType()
 export class SkillQuery {
@@ -36,7 +37,7 @@ export class SkillResolver {
     @Arg('offset', { defaultValue: 0 }) offset: number = 0,
   ) : Promise <Skill[]> {
     try {
-      return await Skill.find({take: first, skip: offset});
+      return await Skill.find({take: first, skip: offset, relations: ['category']});
     } catch (error) {
       throw new Error (`SkillResolver.getAllSkills errored. Error-Msg.: ${error}`);
     }
@@ -50,6 +51,18 @@ export class SkillResolver {
       throw new Error (`SkillResolver.getOneskill errored. Error-Msg.: ${error}`);
     }
   }
+
+  // @Query(returns =>Skill)
+  // async getSearchableSkillsAndMore (@Arg('query', () => SkillQuery) query: SkillQuery) : Promise <Skill> {
+  //   try {
+  //     let searchInput = [];
+  //     const skills = await Skill.find();
+  //     for
+  //     return await Skill.findOne(query.skillId);
+  //   } catch (error) {
+  //     throw new Error (`SkillResolver.getOneskill errored. Error-Msg.: ${error}`);
+  //   }
+  // }
 
   @Query(returns => [Skill])
   async getAllSkillsForProducerOrCategory (
@@ -87,32 +100,34 @@ export class SkillResolver {
     }
   }
 
-  @Query(returns => [Skill])
-  async getAvailableSkillsForProducer (@Arg('query', () => SkillQuery) query: SkillQuery) : Promise <Skill[]> {
+  @Query(returns => [Skill])
+  async getAvailableSkillsForProducer (@Arg('query', () => SkillQuery) query: SkillQuery): Promise <Skill[]>  {
     try {
-      let userSkills: Skill[] = [];
+      let userSkills: number[] = [];
       let availableSkills: Skill[] = [];
       
       const user = await GigUser.findOne(query.userId);
       if (!user) throw `SkillResolver.getAvailableSkillsForProducer errored: Couldn't find user with id ${query.userId}`;
       
-      const relations = await SkillUserRelation.find({ where: {user: user, isPersonal: true}});
-      for (const relation of relations) {
-        const skill = await Skill.findOne(relation.skillId);
-        userSkills.push(skill);
+      const relations = await SkillUserRelation.find({ where: { userId: user.id, isPersonal: true }});
+      
+      if (relations.length > 0) {
+        for (const relation of relations) {
+          const skill = await Skill.findOne(relation.skillId);
+          userSkills.push(skill.id);
+
+          availableSkills = await getManager()
+            .createQueryBuilder(Skill, 'skill')
+            .where("skill.id NOT IN (" + userSkills + ")")
+            .getMany();
+        }
+      } else {
+        availableSkills = await Skill.find();
       }
 
-      const allSkills = await Skill.find();
-      for (const skill of allSkills) {
-        for (const userSkill of userSkills) {
-          if (skill.id !== userSkill.id) {
-            availableSkills.push(skill);
-          }
-        }
-      }
       return availableSkills;
     } catch (error) {
-      throw new Error (`SkillResolver.getAllSkillsForProducer errored. Error-Msg.: ${error}`);
+      throw new Error (`SkillResolver.getAvailableSkillsForProducer errored. Error-Msg.: ${error}`);
     }
   }
 
@@ -121,10 +136,10 @@ export class SkillResolver {
     return await SkillUserRelationResolver.getProducersForSkill({ skillId: skill.id }, 0, 0);
   };
 
-  @FieldResolver(() => Category)
-  async category(@Root() skill: Skill) {
-    return await Category.findOne(skill.category)
-  };
+  // @FieldResolver(() => Category)
+  // async category(@Root() skill: Skill) {
+  //   return await Category.findOne(skill.category)
+  // };
 
 
   @Mutation(() => Skill)
@@ -157,6 +172,39 @@ export class SkillResolver {
 
     } catch (error) {
       throw new Error (`SkillResolver.addSkill errored. Error-Msg.: ${error}`);
+    }
+  }
+
+  @Mutation(returns => Boolean)
+  async addOrUpdateSkillForUser(
+    @Arg('userId') userId: number, 
+    @Arg('skillIds', type => [Number]) skillIds: number[],
+    @Arg('isPersonal') isPersonal: boolean
+  ): Promise <Boolean> {
+    try {
+      const user = await GigUser.findOne(userId);
+      console.log(skillIds)
+
+      for (const skillId of skillIds) {
+        const skill = await Skill.findOne(skillId);
+        const relation = await SkillUserRelation.findOne({where: { user: user, skill: skill }});
+
+        if (relation) {
+          relation.isPersonal = isPersonal;
+          await relation.save();
+        } else {
+          const relation = await new SkillUserRelation();
+          relation.user = user;
+          relation.userId = user.id;
+          relation.skill = skill;
+          relation.skillId = skillId;
+          relation.isPersonal = isPersonal;
+          await relation.save();
+        }
+      }
+      return true;
+    } catch (error) {
+      throw new Error (`SkillResolver.addOrUpdateSkillorUser errored. \n Error-Msg: ${error}`);
     }
   }
 

@@ -88,7 +88,6 @@ export class ChatRoomResolver {
         try {
             const lastMessage = await Message.findOne({where: {id: input.lastMessageId}, relations: ['chatRoom']});
             const chatRoom = await ChatRoom.findOne(lastMessage.chatRoom.id);
-            
             chatRoom.lastMessageId = input.lastMessageId;
             await chatRoom.save();
             return chatRoom;

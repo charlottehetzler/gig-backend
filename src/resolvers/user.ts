@@ -9,7 +9,8 @@ import { SkillUserRelation } from '../entity/skillUserRelation';
 import { Language } from '../entity/language';
 import { LanguageUserRelation } from '../entity/languageUserRelation';
 import { Friend, FRIEND_STATUS } from '../entity/friend';
-import { query } from 'express';
+import { LanguageResolver } from './language';
+import { FriendResolver } from './friend';
 
 @InputType()
 export class UserQuery {
@@ -51,6 +52,11 @@ export class UserQuery {
 
 @Resolver(of => GigUser)
 export class UserResolver {
+
+    constructor(
+        private readonly languageResolver: LanguageResolver,
+        private readonly friendResolver: FriendResolver,
+    ) { }
 
     @Query(returns => [GigUser])
     async getProducersForSkill (
@@ -129,7 +135,7 @@ export class UserResolver {
     @FieldResolver(() => [Language])
     async languages(@Root() user: GigUser) {
         let languages: Language[] = [];
-        const relations = await LanguageUserRelation.find({ where: {user: user} });
+        const relations = await LanguageUserRelation.find({ where: {user: user, isActive: true} });
         for (const relation of relations) {
             const language =  await Language.findOne(relation.languageId);
             languages.push(language);
@@ -137,21 +143,27 @@ export class UserResolver {
         return languages;
     };
 
-    
     @FieldResolver(() => [ChatRoom])
     async allChatRooms(@Root() user: GigUser) {
-        const chatRoomUsers = await ChatRoomUser.find({where: {user: user}, relations: ['chatRoom', 'user'], order: {updatedAt: 'DESC'}});
+        const chatRoomUsers = await ChatRoomUser.find({where: {user: user}, relations: ['chatRoom', 'user'] });
         let chatRooms : ChatRoom[] = [];
         for (const chatRoomUser of chatRoomUsers) {
             const chatRoom = await ChatRoom.findOne(chatRoomUser.chatRoom.id);
             chatRooms.push(chatRoom);
         };
+        chatRooms = chatRooms.sort((a:any , b:any) => b.updatedAt - a.updatedAt)
         return chatRooms;
     };
     
     @FieldResolver(() => [Review])
     async lastReviews(@Root() user: GigUser) {
         return await Review.find({where: {user: user}, take: 10, order: {createdAt: 'DESC'}});
+    };
+
+    @FieldResolver(() => Number)
+    async totalFriends(@Root() user: GigUser) {
+        const friends = await Friend.findAndCount({where: {currentUserId: user.id, status: FRIEND_STATUS.accepted} });
+        return friends[1];
     };
 
     @Mutation(() => GigUser)

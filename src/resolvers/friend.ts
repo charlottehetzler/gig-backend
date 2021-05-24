@@ -48,7 +48,7 @@ export class FriendResolver {
     ): Promise <Number> {
         try {
             const friends = await Friend.findAndCount({where: {currentUserId: query.currentUserId, status: FRIEND_STATUS.accepted} });
-            return friends[1]
+            return friends[1];
         } catch (error) {
             throw new Error (`FriendResolver.getLatestFriendsForUser errored. Error-Msg.: ${error}`);      
         }

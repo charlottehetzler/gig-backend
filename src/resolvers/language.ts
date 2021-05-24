@@ -2,7 +2,7 @@ import { Resolver, Query, Arg, InputType, Field, Mutation } from 'type-gra
 import { GigUser } from '../entity/gigUser';
 import { Language } from '../entity/language';
 import { LanguageUserRelation } from '../entity/languageUserRelation';
-import { Not } from 'typeorm';
+import { Not, getManager } from 'typeorm';
 
 @InputType()
 export class LanguageId {
@@ -40,36 +40,28 @@ export class LanguageResolver {
         @Arg('query', () => LanguageQuery) query: LanguageQuery
     ) : Promise <Language[]> {
         try {
-            let userLanguages: Language[] = []
+            let userLanguages: number[] = []
             
             const user = await GigUser.findOne(query.userId);
-            
-            const nativeLanguage = await Language.findOne({where: {name: user.nativeLanguage}});
-            
-            let availableLanguages: Language[] = []
-            
-            const allLanguages = await Language.find({where: {id: Not(nativeLanguage.id)}});
+            if (!user) throw `LanguageResolver.getAllAvailableLanguagesForUser  errored: Couldn't find user with id ${query.userId}`;
 
-            const relations = await LanguageUserRelation.find({where: {userId: user.id} });
+            const nativeLanguage = await Language.findOne({where: {name: user.nativeLanguage}});
+
+            const relations = await LanguageUserRelation.find({where: {userId: user.id, isActive: true} });
             
             for (const relation of relations) {
                 const language = await Language.findOne({ where: {id: relation.languageId}});
-                userLanguages.push(language);
+                userLanguages.push(language.id);
             }
             
-            for (const language of allLanguages) {
-                for (const userLanguage of userLanguages) {
-                    if (language.id !== userLanguage.id) {
-                        availableLanguages.push(language);
-                    }
-                }
-            }
+            const availableLanguages = await getManager()
+                .createQueryBuilder(Language, 'language')
+                .where("language.id NOT IN (" + userLanguages + ")")
+                .andWhere("language.id != :id", {id: nativeLanguage.id})
+                .getMany();
 
-            const availableLanguagesUnique = availableLanguages.filter(function(item, pos, self) {
-                return self.indexOf(item) == pos;
-            })
             
-            return availableLanguagesUnique;
+            return availableLanguages;
         } catch (error) {
             throw new Error (`LanguageResolver.getAllAvailableLanguagesForUser errored. Error-Msg.: ${error}`);      
         }
