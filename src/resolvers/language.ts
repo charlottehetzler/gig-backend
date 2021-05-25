@@ -111,7 +111,6 @@ export class LanguageResolver {
 
                 const relation = await LanguageUserRelation.findOne({ where: {user: user, language: language} });
 
-
                 if (relation) {
                     relation.isActive = isActive;
                     await relation.save();

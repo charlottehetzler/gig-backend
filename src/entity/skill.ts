@@ -3,6 +3,8 @@ import { Field, ObjectType, GraphQLISODateTime } from "type-graphql";
 import { Category } from "./category";
 import { SkillUserRelation } from "./skillUserRelation";
 import { Review } from "./review";
+import { Deal } from "./deal";
+import { Post } from "./post";
 
 @ObjectType()
 @Entity() export class Skill extends BaseEntity {
@@ -31,6 +33,14 @@ import { Review } from "./review";
     @JoinColumn({ name: 'categoryId' })
     @Field(type => Category)
     category: Category;
+
+    @OneToMany(type => Deal, deal => deal.skill, {cascade: true})
+    @Field(type => [Deal], { nullable: true })
+    deals: Deal[];
+
+    @OneToMany(type => Post, post => post.skill, {cascade: true})
+    @Field(type => [Post], { nullable: true })
+    posts: Post[];
 
     @Field(type => [SkillUserRelation], {nullable: true })
     @OneToMany(type => SkillUserRelation, skillUserRelation => skillUserRelation.skill, { nullable: true })

@@ -155,7 +155,7 @@ export class SkillResolver {
       const skill = new Skill();
       skill.name = input.name;
       skill.category = category;
-      if(input.description) skill.description = input.description;
+      if (input.description) skill.description = input.description;
       const newSkill = await skill.save();
 
       const relation = new SkillUserRelation();
@@ -183,7 +183,6 @@ export class SkillResolver {
   ): Promise <Boolean> {
     try {
       const user = await GigUser.findOne(userId);
-      console.log(skillIds)
 
       for (const skillId of skillIds) {
         const skill = await Skill.findOne(skillId);

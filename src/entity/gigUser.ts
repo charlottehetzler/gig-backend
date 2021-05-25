@@ -3,6 +3,9 @@ import { Field, GraphQLISODateTime, ObjectType } from "type-graphql";
 import { Review } from "./review";
 import { ChatRoomUser } from "./chatRoomUser";
 import { Message } from "./message";
+import { Deal } from "./deal";
+import { LanguageUserRelation } from "./languageUserRelation";
+import { Post } from "./post";
 
 export enum UserType {
     "consumer" = "consumer",
@@ -79,5 +82,13 @@ export enum UserType {
     @OneToMany(type => Message, message => message.user, {cascade: true})
     @Field(type => [Message], { nullable: true })
     messages: Message[];
+
+    @OneToMany(type => Deal, deal => deal.user, {cascade: true})
+    @Field(type => [Deal], { nullable: true })
+    deals: Deal[];
+
+    @OneToMany(type => Post, post => post.user, {cascade: true})
+    @Field(type => [Post], { nullable: true })
+    posts: Post[];
 
 }

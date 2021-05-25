@@ -111,7 +111,6 @@ export class UserResolver {
                 }
             }
         }
-        
         return newUsers;
     }
 
@@ -187,7 +186,6 @@ export class UserResolver {
         } catch (error) {
             throw `UserResolver.updateProfile errored. Error-Msg.: ${error}`;
         }
-
     }
 
     static async getReviewGiver(reviewId: number) : Promise <GigUser> {
