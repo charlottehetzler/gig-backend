@@ -10,7 +10,7 @@ import { SkillUserRelationResolver } from '../resolvers/skillUserRelation';
 import { ReviewResolver } from '../resolvers/review';
 import { FriendResolver } from '../resolvers/friend';
 import { LanguageResolver } from '../resolvers/language';
-import { DealResolver } from '../resolvers/deal';
+import { GigResolver } from '../resolvers/gig';
 import { AuthResolver } from '../resolvers/auth';
 
 export const compiledSchema = buildSchemaSync({
@@ -24,7 +24,7 @@ export const compiledSchema = buildSchemaSync({
         UserResolver,
         FriendResolver, 
         LanguageResolver, 
-        DealResolver, 
+        GigResolver, 
         AuthResolver
     ]
 });

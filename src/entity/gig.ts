@@ -5,7 +5,7 @@ import { Category } from "./category";
 import { Skill } from "./skill";
 
 @ObjectType()
-@Entity() export class Post extends BaseEntity {
+@Entity() export class Gig extends BaseEntity {
 
     @PrimaryGeneratedColumn()
     @Field()
@@ -31,6 +31,10 @@ import { Skill } from "./skill";
     @Field({ nullable: true })
     isClosed: boolean;
 
+    @Column({ nullable: true, default: false })
+    @Field({ nullable: true })
+    isAd: boolean;
+
     @CreateDateColumn({ nullable: false })
     @Field(type => GraphQLISODateTime)
     createdAt: Date;
@@ -39,17 +43,17 @@ import { Skill } from "./skill";
     @Field(() => GraphQLISODateTime)
     updatedAt: Date;
 
-    @ManyToOne(type => Category, category => category.posts)
+    @ManyToOne(type => Category, category => category.gigs)
     @JoinColumn({ name: 'categoryId' })
     @Field(type => Category)
     category: Category;
 
-    @ManyToOne(type => Skill, skill => skill.posts)
+    @ManyToOne(type => Skill, skill => skill.gigs)
     @JoinColumn({ name: 'skillId' })
     @Field(type => Skill)
     skill: Skill;
 
-    @ManyToOne(type => GigUser, user => user.posts)
+    @ManyToOne(type => GigUser, user => user.gigs)
     @JoinColumn({ name: 'userId' })
     @Field(type => GigUser)
     user: GigUser;

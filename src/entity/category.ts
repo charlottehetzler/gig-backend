@@ -1,8 +1,7 @@
 import { Entity, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Column, OneToMany } from "typeorm";
 import { Field, ObjectType, GraphQLISODateTime } from "type-graphql";
 import { Skill } from "./skill";
-import { Deal } from "./deal";
-import { Post } from "./post";
+import { Gig } from "./gig";
 
 @ObjectType()
 @Entity() export class Category extends BaseEntity {
@@ -27,11 +26,7 @@ import { Post } from "./post";
     @Field(type => [Skill], { nullable: true })
     skills: Skill[];
 
-    @OneToMany(type => Post, post => post.category, {cascade: true})
-    @Field(type => [Post], { nullable: true })
-    posts: Post[];
-
-    @OneToMany(type => Deal, deal => deal.category, {cascade: true})
-    @Field(type => [Deal], { nullable: true })
-    deals: Deal[];
+    @OneToMany(type => Gig, gig => gig.category, {cascade: true})
+    @Field(type => [Gig], { nullable: true })
+    gigs: Gig[];
 }
