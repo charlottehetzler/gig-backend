@@ -60,7 +60,6 @@ export class LanguageResolver {
                 .andWhere("language.id != :id", {id: nativeLanguage.id})
                 .getMany();
 
-            
             return availableLanguages;
         } catch (error) {
             throw new Error (`LanguageResolver.getAllAvailableLanguagesForUser errored. Error-Msg.: ${error}`);      

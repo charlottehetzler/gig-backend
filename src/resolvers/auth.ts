@@ -152,19 +152,19 @@ export class AuthResolver {
         let user = await GigUser.findOne(input.userId);
 
         if (!user) {
-            logger.info(`customer not found: ${input.userId}`);
+            logger.info(`no user found: ${input.userId}`);
             throw `Authentication Error: couldn't find user`;
         }
 
         if (input.type === 'producer') {
-            user.isConsumer = true;
+            user.isConsumer = false;
             await user.save();
         } else {
-            user.isConsumer = false;
+            user.isConsumer = true;
             await user.save();
         }
 
-        const token =  await jwt.sign({ userId: user.id, email: user.email}, 'supersecretsauce');
+        const token =  await jwt.sign({ userId: user.id, email: user.email }, 'supersecretsauce');
         logger.info(`user ${input.userId} updated successfully`);
 
         const authData = new AuthData();
@@ -176,7 +176,6 @@ export class AuthResolver {
         authData.userType = user.isConsumer ? UserType.consumer : UserType.producer;
         return authData;
     }
-
 
     async hashPassword(pwd: string): Promise<string> {
         return await bcrypt.hash(pwd, AuthResolver.saltRounds);
