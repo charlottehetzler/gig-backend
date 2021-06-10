@@ -14,7 +14,7 @@ const envConfig = convict({
     },
     port: {
         format: Number,
-        default: 3000,
+        default: 3030,
         arg: 'port',
         env: 'PORT',
         doc: 'HTTP port for the server to listen on'
